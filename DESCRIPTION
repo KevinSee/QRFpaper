@@ -1,0 +1,14 @@
+Package: QRFpaper
+Title: Estimate Carrying Capacity with Quantile Regression Forests
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Kevin",
+           family = "See",
+           role = c("aut", "cre"),
+           email = "kevin.see@biomark.com",
+           comment = c(ORCID = "0000-0002-9762-6442"))
+Description: What the package does (one paragraph)
+License: MIT + file LICENSE
+ByteCompile: true
+Encoding: UTF-8
+LazyData: true
