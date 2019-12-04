@@ -1,7 +1,7 @@
 Package: QRFpaper
 Title: Estimate Carrying Capacity with Quantile Regression Forests
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person(given = "Kevin",
            family = "See",
            role = c("aut", "cre"),
@@ -14,3 +14,7 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/KevinSee/QRFpaper
 BugReports: https://github.com/KevinSee/QRFpaper/issues
+Imports: bookdown,
+    here
+Suggests: devtools,
+    git2r
