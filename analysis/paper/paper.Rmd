@@ -63,6 +63,7 @@ knitr::opts_chunk$set(
 ```{r packages}
 library(tidyverse)
 library(QRFcapacity) # for the moment, until we know exactly what data to copy over to this repo
+library(QRFpaper)
 library(janitor)
 library(knitr)
 
@@ -72,6 +73,17 @@ library(knitr)
 ```{r package-bibtex}
 knitr::write_bib(c("FSA", "Rcapture", "minerva", "quantregForest", "sf", "knitr", "rmarkdown"),
                  file = 'packages.bib')
+```
+
+```{r load-data}
+data(fish_hab, 
+     hab_dict, 
+     hab_data, 
+     hab_avg, 
+     qrf_data,
+     dens_offset,
+     qrf_mod,
+     sel_hab_mets)
 ```
 
 
