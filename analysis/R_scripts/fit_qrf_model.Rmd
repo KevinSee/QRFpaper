@@ -1,0 +1,468 @@
+---
+title: "QRF Covariate Selection"
+author: "Kevin See"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+# load packages for analysis
+library(QRFcapacity)
+library(maptools)
+library(tidyverse)
+library(janitor)
+library(magrittr)
+library(minerva)
+library(sf)
+library(quantregForest)
+library(survey)
+library(MuMIn)
+
+
+# set default theme for ggplot
+theme_set(theme_bw())
+# setwd('analysis/R_scripts')
+```
+
+# Select QRF Habitat Covariates
+
+We loaded the data that had been prepped and saved as part of the `QRFcapacity` package. We used the data from all CHaMP sites, 2011-2017.
+
+```{r load-data}
+# determine which set of fish/habitat data to use
+data("fh_sum_champ_2017")
+fish_hab = fh_sum_champ_2017 %>%
+  filter(Species == 'Chinook') %>%
+  mutate_at(vars(Watershed, Year),
+            list(as.factor))
+  
+
+# and the appropriate habitat dictionrary to go with it
+data("hab_dict_2017")
+hab_dict = hab_dict_2017
+
+# all the related habitat data
+data("champ_site_2011_17")
+hab_data = champ_site_2011_17 %>%
+  filter(!Watershed %in% c('Big-Navarro-Garcia (CA)',
+                           'CHaMP Training',
+                           'Region 17',
+                           'Walla Walla',
+                           'Umatilla'))
+
+data("champ_site_2011_17_avg")
+hab_avg = champ_site_2011_17_avg %>%
+  filter(!Watershed %in% c('Big-Navarro-Garcia (CA)',
+                           'CHaMP Training',
+                           'Region 17',
+                           'Walla Walla',
+                           'Umatilla'))
+
+# add temperature metrics
+data("champ_temps")
+
+# add average aug temperature to average CHaMP metrics
+hab_avg %<>%
+  left_join(champ_temps %>%
+              as_tibble() %>%
+              select(Site, avg_aug_temp = S2_02_11) %>%
+              distinct())
+
+# add specific years' temperature, and average for each site
+hab_data %<>%
+  left_join(hab_data %>%
+              select(VisitID, Year = VisitYear) %>%
+              distinct() %>%
+              left_join(champ_temps %>%
+                          as_tibble() %>%
+                          select(VisitID, avg_aug_temp = S2_02_11))) %>%
+  left_join(hab_data %>%
+              select(VisitID, Year = VisitYear) %>%
+              distinct() %>%
+              left_join(champ_temps %>%
+                          as_tibble() %>%
+                          select(Site:VisitID, S1_93_11:S36_2015) %>%
+                          gather(scenario, aug_temp, S1_93_11:S36_2015) %>%
+                          mutate(Year = str_sub(scenario, -4)) %>%
+                          mutate_at(vars(Year),
+                                    list(as.numeric)) %>%
+                          filter(!is.na(Year)) %>%
+                          select(Site:VisitID, Year, aug_temp))) %>%
+  select(-Year)
+
+```
+
+All sites fell within the range of steelhead, but many of them were outside the range of spring/summer Chinook salmon. However, defining the range of sp/su Chinook is tricky, and it is unclear if the reported data for Chinook salmon includes only sites considered with the range of Chinook, or if we should exclude data from some sites based on our best understanding of the species' range. Currently, we are excluding sites outside the Chinook domain. We created our own list of sites in the John Day that were within a Chinook domain, based on which sites Chinook were found at some point (and downstream of those).
+
+```{r chnk-domain-filter}
+data("chnk_domain")
+
+# which sites were sampled for Chinook? 
+chnk_samps = fish_hab %>%
+  filter(Species == 'Chinook') %>%
+  select(Site:Lon, N) %>%
+  distinct() %>%
+  st_as_sf(coords = c('Lon', 'Lat'),
+           crs = 4326) %>%
+  st_transform(st_crs(chnk_domain))
+
+# set snap distance (in meters)
+st_crs(chnk_samps)
+snap_dist = 1000
+
+# which of those sites are in Chinook domain?
+chnk_sites = chnk_samps %>%
+  as_Spatial() %>%
+  maptools::snapPointsToLines(chnk_domain %>%
+                                mutate(id = 1:n()) %>%
+                                select(id, MPG) %>%
+                                as_Spatial(),
+                              maxDist = snap_dist,
+                              withAttrs = T,
+                              idField = 'id') %>%
+  as('sf') %>%
+  select(-nearest_line_id, -snap_dist) %>%
+  # include some sites in the John Day where Chinook were found (or seemed to be close to sites where Chinook were found)
+  rbind(st_read('../data/derived_data/Chnk_JohnDay_TrueObs.shp',
+                quiet = T) %>%
+          st_transform(st_crs(chnk_domain)) %>%
+          select(-in_range))
+
+fish_hab %<>%
+  filter(Site %in% chnk_sites$Site)
+  # filter(Species == 'Steelhead' |
+  #          (Species == 'Chinook' & Site %in% chnk_sites$Site))
+  
+```
+
+Next we generated MINE stats for all possible habitat metrics, matching them up against the log of fish densities (plus a small value to deal with 0s).
+
+```{r MINE_stats}
+
+# # what are some possible habitat covariates?
+poss_hab_mets = hab_dict %>%
+  filter(MetricCategory != 'Categorical') %>%
+  filter(ShortName %in% names(fish_hab)) %>%
+  pull(ShortName) %>%
+  unique()
+
+# poss_hab_mets = c(poss_hab_mets, 'aug_temp', 'avg_aug_temp') %>%
+#   unique()
+
+
+mine_res = fish_hab %>%
+  mutate_at(vars(starts_with('LWVol')),
+            list(~ . / Lgth_Wet)) %>%
+  mutate(fish_dens = log(fish_dens + 0.005)) %>%
+  estimate_MIC(covars = poss_hab_mets,
+               response = 'fish_dens') %>%
+  mutate(Species = 'Chinook') %>%
+  left_join(hab_dict %>%
+              filter(MetricGroupName == 'Visit Metric') %>%
+              select(Metric = ShortName,
+                     MetricCategory,
+                     Name),
+            by = 'Metric') %>%
+  mutate_at(vars(MetricCategory),
+            list(fct_explicit_na),
+            na_level = 'Other') %>%
+  mutate_at(vars(Name),
+            list(as.character)) %>%
+  mutate(Name = if_else(is.na(Name),
+                        as.character(Metric),
+                        Name)) %>%
+  # put the metric names in descending order by MIC
+  mutate_at(vars(Metric, Name),
+            list(~ fct_reorder(., .x = MIC))) %>%
+  select(Species, MetricCategory, Metric, everything()) %>%
+  arrange(Species, MetricCategory, desc(MIC))
+
+```
+
+Plot the MINE results and save figures for manuscript.
+
+```{r MINE-figures}
+mine_plot_df = mine_res %>%
+  # filter out some metrics with too many NAs or 0s
+  filter((perc_NA < 0.2 & non_0 > 100) | MetricCategory == 'Temperature') %>%
+  # filter out metrics with very low variance
+  # filter(var < 0.1) %>%
+  # filter(obsCV < 0.1)
+  # janitor::tabyl(MetricCategory)
+  # select(1:11)
+  # filter out area and volume metrics
+  filter(!grepl('Area$', Metric),
+         !grepl('Vol$', Metric),
+         !Metric %in% c('Lgth_Wet', 
+                        'Lgth_BfChnl',
+                        'Lgth_WetChnl',
+                        'Area_Wet', 
+                        'Area_Bf', 
+                        'WetVol', 
+                        'BfVol'))
+
+mine_p = mine_plot_df %>%
+  ggplot(aes(x = Name,
+             y = MIC)) +
+  geom_col(position = position_dodge(1),
+           fill = 'gray45') +
+  coord_flip() +
+  facet_wrap(~ MetricCategory,
+             scales = 'free_y',
+             ncol = 3) +
+  scale_fill_brewer(palette = 'Set1',
+                    guide = guide_legend(nrow = 1)) +
+  theme(legend.position = 'bottom',
+        axis.text = element_text(size = 5)) +
+  labs(y = 'Habitat Covariate')
+
+mine_p2 = mine_plot_df %>%
+  ggplot(aes(x = Name,
+             y = MIC,
+             fill = MetricCategory)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = 'Set1',
+                    guide = guide_legend(nrow = 1)) +
+  theme(legend.position = 'bottom',
+        axis.text = element_text(size = 5)) +
+  labs(y = 'Habitat Covariate')
+
+```
+
+```{r, eval = F}
+library(corrr)
+#----------------------------------------------
+# Look at correlations between habitat metrics
+#----------------------------------------------
+# top metrics
+sel_mets = poss_hab_mets
+sel_mets = mine_plot_df %>%
+  group_by(MetricCategory) %>%
+  slice(1:5) %>%
+  ungroup() %>%
+  pull(Metric) %>%
+  unique() %>%
+  as.character()
+
+
+corr_mat = hab_avg %>%
+  select(one_of(sel_mets)) %>%
+  corrr::correlate()
+
+corr_mat %>%
+  corrr::rearrange(absolute = F) %>%
+  corrr::shave(upper = T) %>% 
+  corrr::stretch() %>%
+  filter(!is.na(r)) %>%
+  filter(abs(r) > 0.5) %>%
+  kable()
+
+corr_p1 = corr_mat %>%
+  # rearrange(absolute = F) %>%
+  shave(upper = T) %>% 
+  rplot(legend = T,
+        print_cor = T)
+
+corr_p2 = network_plot(corr_mat)
+```
+
+```{r correlation-plots}
+#----------------------------------------------
+# Look at correlations between habitat metrics
+#----------------------------------------------
+
+library(ggcorrplot)
+
+corr_list = hab_dict %>%
+  filter(MetricCategory != 'Categorical') %>%
+  split(list(.$MetricCategory)) %>%
+  map(.f = function(x) {
+    catg_mets = x %>%
+      pull(ShortName)
+    hab_data %>%
+      select(one_of(catg_mets)) %>%
+      cor(use = "pairwise.complete.obs")
+      # corrr::correlate(use = "pairwise.complete.obs",
+      #                  method = "pearson",
+      #                  quiet = T)
+  })
+  
+# make correlation plots by metric category
+corr_p_list = corr_list %>%
+  map(.f = ggcorrplot,
+      method = "circle",
+      show.diag = F,
+      type = 'lower')
+
+# add a title to each plot
+for(i in 1:length(corr_p_list)) {
+  corr_p_list[[i]] = corr_p_list[[i]] +
+    labs(title = names(corr_list)[i])
+}
+
+# save as a PDF
+pdf("../figures/correlation_plots_all.pdf",
+    width = 8,
+    height = 8)
+for(i in 1:length(corr_p_list)) {
+  print(corr_p_list[[i]])
+}
+dev.off()
+
+```
+
+Based on the MIC results, and trying to stay away from pairs of metrics that were too closely correlated, we came up with the following list of QRF covariates.
+
+```{r habitat-covariates}
+sel_hab_mets = tibble(Species = c('Chinook'),
+                      Metric = c('UcutArea_Pct',
+                                 'FishCovNone',
+                                 'SubEstGrvl',
+                                 'FstTurb_Freq',
+                                 'FstNT_Freq',
+                                 'CU_Freq',
+                                 'SlowWater_Pct',
+                                 'NatPrin1',
+                                 'DistPrin1',
+                                 'avg_aug_temp',
+                                 # 'Sin_CL',
+                                 'Sin',
+                                 'WetWdth_CV',
+                                 'WetBraid',
+                                 'WetSC_Pct',
+                                 'Q',
+                                 'WetWdth_Int',
+                                 'LWFreq_Wet',
+                                 'LWVol_WetFstTurb'))
+
+# sum(!sel_hab_mets$Metric %in% names(fish_hab))
+```
+
+```{r}
+sel_hab_mets %>%
+  select(ShortName = Metric) %>%
+  distinct() %>%
+  left_join(hab_dict) %>%
+  select(Catg = MetricCategory, 
+         Metric = Name, 
+         Description = DescriptiveText) %>%
+  kable()
+```
+
+# Fit QRF Model
+
+```{r}
+#-----------------------------------------------------------------
+# Fit QRF model
+#-----------------------------------------------------------------
+covars = sel_hab_mets$Metric
+# impute missing data in fish / habitat dataset
+set.seed(7)
+qrf_data = fish_hab %>%
+  impute_missing_data(covars = covars,
+                      impute_vars = c('Watershed', 'Elev_M', 'Sin', 'Year', 'CUMDRAINAG'),
+                      method = 'missForest') %>%
+  select(Site, Watershed, Year, LON_DD, LAT_DD, fish_dens, VisitID, one_of(covars))
+
+# fit the QRF model
+# set the density offset (to accommodate 0z)
+dens_offset = 0.005
+
+# fit random forest models
+set.seed(4)
+qrf_mod = quantregForest(x = qrf_data %>%
+                               select(one_of(covars)) %>%
+                               as.matrix,
+                             y = qrf_data %>%
+                               mutate_at(vars(fish_dens),
+                                         list(~ log(. + dens_offset))) %>%
+                               select(fish_dens) %>%
+                               as.matrix(),
+                             keep.inbag = T,
+                             ntree = 1000)
+
+# save some results
+use_data(fish_hab, 
+         hab_dict,
+         hab_data,
+         hab_avg,
+         sel_hab_mets,
+         qrf_data,
+         dens_offset,
+         qrf_mod,
+         version = 2,
+         overwrite = T)
+
+```
+
+## Predict at all CHaMP sites
+
+```{r champ_predictions}
+# what quantile is a proxy for capacity?
+pred_quant = 0.9
+
+covars = unique(sel_hab_mets$Metric)
+
+# impute missing values in habitat data
+hab_impute = hab_avg %>%
+  mutate_at(vars(Watershed, Channel_Type),
+            list(fct_drop)) %>%
+  impute_missing_data(data = .,
+                      covars = covars,
+                      impute_vars = c('Watershed', 
+                                      'Elev_M', 
+                                      'Channel_Type', 
+                                      'CUMDRAINAG'),
+                      method = 'missForest') %>%
+  select(Site, Watershed, LON_DD, LAT_DD, VisitYear, Lgth_Wet, Area_Wet, one_of(covars))
+
+# predict at all CHaMP sites
+pred_hab_sites = hab_impute %>%
+  mutate(chnk_per_m = predict(qrf_mod,
+                              newdata = select(., one_of(covars)),
+                              what = pred_quant),
+         chnk_per_m = exp(chnk_per_m) - dens_offset,
+         chnk_per_m2 = chnk_per_m * Lgth_Wet / Area_Wet)
+
+# filter out sites outside the Chinook domain
+data("chnk_domain")
+snap_dist = 1000
+
+pred_hab_sites_chnk = pred_hab_sites %>%
+  filter(!is.na(LON_DD)) %>%
+  st_as_sf(coords = c('LON_DD', 'LAT_DD'),
+           crs = 4326) %>%
+  st_transform(crs = st_crs(chnk_domain)) %>%
+  as_Spatial() %>%
+  maptools::snapPointsToLines(chnk_domain %>%
+                                mutate(id = 1:n()) %>%
+                                select(id, MPG) %>%
+                                as_Spatial(),
+                              maxDist = snap_dist,
+                              withAttrs = T,
+                              idField = 'id') %>%
+  as('sf') %>%
+  as_tibble() %>%
+  select(-nearest_line_id, -snap_dist, -geometry) %>%
+  # add sites in the John Day
+  bind_rows(st_read('../data/derived_data/Chnk_JohnDay_TrueObs.shp',
+                    quiet = T) %>%
+              as_tibble() %>%
+              select(Site) %>%
+              inner_join(pred_hab_sites))
+
+```
+
+
+# Extrapolation
+
