@@ -117,17 +117,19 @@ chnk_samps = fish_hab %>%
 
 # set snap distance (in meters)
 st_crs(chnk_samps)
-snap_dist = 1000
+max_snap_dist = 1000
 
 # which of those sites are in Chinook domain?
 chnk_sites = chnk_samps %>%
   as_Spatial() %>%
-  maptools::snapPointsToLines(chnk_domain %>%
+  snapPointsToLines_v2(points = .,
+  # maptools::snapPointsToLines(points = .,
+                              lines = chnk_domain %>%
                                 mutate(id = 1:n()) %>%
                                 select(id, MPG) %>%
                                 as_Spatial(),
-                              maxDist = snap_dist,
-                              withAttrs = T,
+                              maxDist = max_snap_dist,
+                              withAttrs = TRUE,
                               idField = 'id') %>%
   as('sf') %>%
   select(-nearest_line_id, -snap_dist) %>%
@@ -392,16 +394,16 @@ qrf_mod = quantregForest(x = qrf_data %>%
                              ntree = 1000)
 
 # save some results
-use_data(fish_hab, 
-         hab_dict,
-         hab_data,
-         hab_avg,
-         sel_hab_mets,
-         qrf_data,
-         dens_offset,
-         qrf_mod,
-         version = 2,
-         overwrite = T)
+usethis::use_data(fish_hab, 
+                  hab_dict,
+                  hab_data,
+                  hab_avg,
+                  sel_hab_mets,
+                  qrf_data,
+                  dens_offset,
+                  qrf_mod,
+                  version = 2,
+                  overwrite = T)
 
 ```
 
@@ -444,7 +446,8 @@ pred_hab_sites_chnk = pred_hab_sites %>%
            crs = 4326) %>%
   st_transform(crs = st_crs(chnk_domain)) %>%
   as_Spatial() %>%
-  maptools::snapPointsToLines(chnk_domain %>%
+  snapPointsToLines_v2(chnk_domain %>%
+  # maptools::snapPointsToLines(chnk_domain %>%
                                 mutate(id = 1:n()) %>%
                                 select(id, MPG) %>%
                                 as_Spatial(),

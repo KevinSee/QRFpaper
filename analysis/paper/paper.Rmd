@@ -62,7 +62,7 @@ knitr::opts_chunk$set(
 
 ```{r packages}
 library(tidyverse)
-library(QRFcapacity) # for the moment, until we know exactly what data to copy over to this repo
+# library(QRFcapacity) # for the moment, until we know exactly what data to copy over to this repo
 library(QRFpaper)
 library(janitor)
 library(knitr)
@@ -87,20 +87,20 @@ data(fish_hab,
 ```
 
 
-```{r read-data}
+```{r read-data, eval = F}
 # fish/habitat data for fitting QRF models
-# data("fh_sum_champ_2017")
-# fh_data = fh_sum_champ_2017 %>%
-#   filter(Species == 'Chinook') %>%
-#   mutate_at(vars(Watershed, Species, FishCrew),
-#             list(fct_drop))
-
-
-data("fh_sum_champ_2014")
-fh_data = fh_sum_champ_2014 %>%
+data("fh_sum_champ_2017")
+fh_data = fh_sum_champ_2017 %>%
   filter(Species == 'Chinook') %>%
   mutate_at(vars(Watershed, Species, FishCrew),
             list(fct_drop))
+
+
+# data("fh_sum_champ_2014")
+# fh_data = fh_sum_champ_2014 %>%
+#   filter(Species == 'Chinook') %>%
+#   mutate_at(vars(Watershed, Species, FishCrew),
+#             list(fct_drop))
 
 # habitat data used for predicting capacity
 data("champ_site_2011_17")
@@ -119,7 +119,7 @@ hab_dict = hab_dict_2017
 
 ```
 
-```{r load-qrf-model}
+```{r load-qrf-model, eval = F}
 load('../data/derived_data/qrf_juv_summer.rda')
 qrf_mod = qrf_mods[[1]]
 qrf_data = qrf_mod_df %>%
@@ -246,7 +246,6 @@ Assumptions we don’t need to make. We make no assumptions regarding the shape 
 # Tables
 
 ```{r fh-samp-table}
-# fh_data %>%
 qrf_data %>%
   # filter(Year <= 2014) %>%
   tabyl(Watershed) %>%
@@ -272,6 +271,12 @@ qrf_mod$importance %>%
         format.args = list(width = c(2, 10, 10, 50)))
   # pander(split.cells = c(2, 10, 10, 50))
 ```
+
+```{r sr-table}
+
+
+```
+
 
 \newpage
 

@@ -16,5 +16,8 @@ URL: https://github.com/KevinSee/QRFpaper
 BugReports: https://github.com/KevinSee/QRFpaper/issues
 Imports: bookdown,
     here
-Suggests: devtools,
-    git2r
+Suggests: 
+    devtools,
+    git2r,
+    testthat
+RoxygenNote: 7.0.2
