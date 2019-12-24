@@ -272,6 +272,98 @@ qrf_mod$importance %>%
   # pander(split.cells = c(2, 10, 10, 50))
 ```
 
+```{r extrap-table}
+mod_fit_df = model_svy_df %>%
+  select(response, data) %>%
+  unnest(cols = data) %>%
+  select(response, obs = qrf_cap) %>%
+  group_by(response) %>%
+  mutate(id = 1:n()) %>%
+  left_join(model_svy_df %>%
+              mutate(pred_full = map(mod_full,
+                                     .f = function(x) {
+                                       predict(x,
+                                               type = 'response') %>%
+                                         as_tibble() %>%
+                                         rename(pred_full = response,
+                                                pred_full_se = SE)
+                                     }),
+                     pred_no_champ = map(mod_no_champ,
+                                         .f = function(x) {
+                                           predict(x,
+                                                   type = 'response') %>%
+                                             as_tibble() %>%
+                                             rename(pred_no_champ = response,
+                                                    pred_no_champ_se = SE)
+                                         })) %>%
+              select(response, starts_with("pred")) %>%
+              unnest(cols = starts_with("pred")) %>%
+              group_by(response) %>%
+              mutate(id = 1:n())) %>%
+  ungroup()
+
+# mod_fit_df %>%
+#   group_by(response) %>%
+#   summarise(r2_full = cor(obs, pred_full)^2,
+#             r2_no_champ = cor(obs, pred_no_champ)^2) %>%
+#   gather(type, r2, -response) %>%
+#   mutate(model = if_else(grepl('no_champ', type),
+#                          'non-CHaMP',
+#                          'CHaMP'),
+#          type = if_else(grepl('adj', type),
+#                         'Adjusted R2',
+#                         'R2')) %>%
+#   spread(type, r2) %>%
+#   mutate(response = recode(response,
+#                            'chnk_per_m' = 'fish/m',
+#                            'chnk_per_m2' = 'fish/m^2')) %>%
+#   select(Model = model,
+#          Response = response,
+#          R2)
+
+mod_fit_df %>%
+  group_by(response) %>%
+  nest() %>%
+  mutate(comp_full = map(data,
+                         .f = function(x) {
+                           lm(pred_full ~ obs,
+                              data = x)
+                         }),
+         comp_no_champ = map(data,
+                             .f = function(x) {
+                               lm(pred_no_champ ~ obs,
+                                  data = x)
+                             })) %>%
+  mutate(r2_full = map_dbl(comp_full,
+                      .f = function(x) summary(x)$r.squared),
+         r2_adj_full = map_dbl(comp_full,
+                           .f = function(x) summary(x)$adj.r.squared),
+         r2_no_champ = map_dbl(comp_no_champ,
+                           .f = function(x) summary(x)$r.squared),
+         r2_adj_no_champ = map_dbl(comp_no_champ,
+                               .f = function(x) summary(x)$adj.r.squared)) %>%
+  ungroup() %>%
+  select(response, starts_with("r2")) %>%
+  gather(type, r2, -response) %>%
+  mutate(model = if_else(grepl('no_champ', type),
+                         'non-CHaMP',
+                         'CHaMP'),
+         type = if_else(grepl('adj', type),
+                        'Adjusted R2',
+                        'R2')) %>%
+  spread(type, r2) %>%
+  mutate(response = recode(response,
+                           'chnk_per_m' = 'fish/m',
+                           'chnk_per_m2' = 'fish/m^2')) %>%
+  select(Model = model,
+         Response = response,
+         R2, `Adjusted R2`) %>%
+  kable(caption = "Summary of model fit for each of the extrapolation models to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to larger scales (e.g., watershed, population).",
+        digits = c(NA, NA, 3, 3))
+
+```
+
+
 ```{r sr-table}
 
 
