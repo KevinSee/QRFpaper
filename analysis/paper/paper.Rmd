@@ -272,7 +272,7 @@ qrf_mod$importance %>%
   # pander(split.cells = c(2, 10, 10, 50))
 ```
 
-```{r extrap-table}
+```{r extrap-r2-table}
 mod_fit_df = model_svy_df %>%
   select(response, data) %>%
   unnest(cols = data) %>%
