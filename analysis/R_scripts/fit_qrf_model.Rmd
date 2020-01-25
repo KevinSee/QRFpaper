@@ -394,16 +394,31 @@ qrf_mod = quantregForest(x = qrf_data %>%
                              ntree = 1000)
 
 # save some results
-usethis::use_data(fish_hab, 
-                  hab_dict,
-                  hab_data,
-                  hab_avg,
-                  sel_hab_mets,
-                  qrf_data,
-                  dens_offset,
-                  qrf_mod,
-                  version = 2,
-                  overwrite = T)
+# usethis::use_data(fish_hab, 
+#                   hab_dict,
+#                   hab_data,
+#                   hab_avg,
+#                   sel_hab_mets,
+#                   qrf_data,
+#                   dens_offset,
+#                   qrf_mod,
+#                   version = 2,
+#                   overwrite = T)
+
+write_rds(fish_hab,
+          "../data/derived_data/fish_hab.rds")
+write_rds(hab_dict,
+          "../data/derived_data/hab_dict.rds")
+write_rds(hab_data,
+          "../data/derived_data/hab_data.rds")
+write_rds(sel_hab_mets,
+          "../data/derived_data/sel_hab_mets.rds")
+write_rds(qrf_data,
+          "../data/derived_data/qrf_data.rds")
+write_rds(dens_offset,
+          "../data/derived_data/dens_offset.rds")
+write_rds(qrf_mod,
+          "../data/derived_data/qrf_mod.rds")
 
 ```
 
@@ -962,16 +977,159 @@ all_preds %<>%
   filter((Site %in% Site[duplicated(Site)] & model == 'CHaMP') |
            !Site %in% Site[duplicated(Site)])
 
+# for CHaMP sites, use direct QRF esimates, not extrapolation ones
+all_preds %<>%
+  left_join(mod_data %>%
+              select(Site, 
+                     qrf_chnk_per_m = chnk_per_m,
+                     qrf_chnk_per_m2 = chnk_per_m2)) %>%
+  mutate(chnk_per_m = if_else(!is.na(qrf_chnk_per_m),
+                              qrf_chnk_per_m,
+                              chnk_per_m),
+         chnk_per_m_se = if_else(!is.na(qrf_chnk_per_m),
+                                 as.numeric(NA),
+                                 chnk_per_m_se),
+         chnk_per_m2 = if_else(!is.na(qrf_chnk_per_m2),
+                               qrf_chnk_per_m2,
+                               chnk_per_m2),
+         chnk_per_m2_se = if_else(!is.na(qrf_chnk_per_m2),
+                                  as.numeric(NA),
+                                  chnk_per_m2_se)) %>%
+  select(-starts_with('qrf'))
+
+
 ```
 
 ```{r save-extrapolation}
+# usethis::use_data(gaa_covars,
+#                   mod_data_weights,
+#                   # model_svy_df,
+#                   all_preds,
+#                   version = 2,
+#                   overwrite = T)
 
-usethis::use_data(gaa_covars,
-                  mod_data_weights,
-                  model_svy_df,
-                  all_preds,
-                  version = 2,
-                  overwrite = T)
+write_rds(gaa_covars,
+          "../data/derived_data/gaa_covars.rds")
+write_rds(mod_data_weights,
+          "../data/derived_data/mod_data_weights.rds")
+write_rds(model_svy_df,
+          "../data/derived_data/model_svy_df.rds")
+write_rds(all_preds,
+          "../data/derived_data/all_preds.rds")
+
+
+```
+
+# Validation
+
+We validated our estimates by comparing them with selected areas that had spawner-recruit data available.
+
+```{r}
+library(sf)
+data("chnk_domain")
+# read in trap polygons
+trap_poly = read_sf('../data/derived_data/trap_regions.shp') %>%
+  # st_transform(crs = 5070)
+  st_transform(st_crs(chnk_domain)) %>%
+  select(-Id)
+
+capacity_pts = all_preds %>%
+  st_as_sf(coords = c('Lon', 'Lat'),
+           crs = 4326) %>%
+  st_transform(st_crs(chnk_domain))
+
+qrf_caps = trap_poly %>%
+  split(list(.$trap_name)) %>%
+  map_df(.id = 'Trap',
+         .f = calc_watershed_cap,
+         spp_range = chnk_domain,
+         capacity_pts = capacity_pts,
+         capacity_name = "chnk_per_m",
+         capacity_se_name = 'chnk_per_m_se') %>%
+  mutate(tot_cap_cv = tot_cap_se / tot_cap) %>%
+  mutate(Trap = recode(Trap,
+                       'Minam R.' = 'Minam River',
+                       'Entiat R.' = 'Entiat River',
+                       'Crooked Fork Creek' = 'Crooked Fork',
+                       'Upper Grande Ronde R.' ='Upper Grande Ronde River',
+                       'Toucannon R.' = 'Tucannon River',
+                       'Pahsimeroi' = 'Pahsimeroi River',
+                       'Hood R.' = 'Hood River',
+                       'John Day Middle Fork' = 'Middle Fork John Day',
+                       'Upper Salmon River' = 'Upper Salmon River Chinook',
+                       'John Day Upper Mainstem' = 'Upper Mainstem John Day',
+                       'East Fork Salmon' = 'East Fork Salmon River',
+                       'Lostine R.' = 'Lostine River'))
+
+library(FSA)
+bh1 <- srFuns('BevertonHolt',
+              param = 3)
+
+data("spawn_rec_data")
+# fit Beverton-Holt curve with capacity fixed at QRF capacity prediction
+qrf_params = spawn_recr_data %>%
+  group_by(Population) %>%
+  nest() %>%
+  left_join(qrf_caps,
+            by = c('Population' = 'Trap')) %>%
+  filter(!is.na(tot_cap)) %>%
+  mutate(form = 'QRF',
+         inits = map2(.x = data,
+                      .y = tot_cap,
+                     .f = function(x, y) {
+                       inits = srStarts(Parr ~ Spawners,
+                                        data = x,
+                                        type = 'BevertonHolt',
+                                        param = 3)
+
+                       inits$a = if_else(inits$a < 0, 
+                                         2e-3, 
+                                         inits$a)
+                       inits$b = 1 / y
+                       return(inits)
+                       }),
+         mod_fit = map2(.x = data,
+                        .y = inits,
+                        .f = function(x, y) {
+                          fit = try(nls(log(Parr) ~ log(bh1(Spawners, a, b)),
+                                        data = x,
+                                        start = y,
+                                        algorithm = 'port',
+                                        lower = c(0, y['b']),
+                                        upper = c(Inf, y['b'])))
+                        }),
+         coefs = map(mod_fit,
+                     .f = function(x) {
+                       if(class(x) == 'try-error') {
+                         return(as.numeric(NA))
+                       } else coef(x)
+                       }),
+         preds = map2(.x = data,
+                      .y = mod_fit,
+                      .f = function(x, y) {
+                        if(class(y) != 'try-error') {
+                          tibble(Spawners = 1:max(x$Spawners)) %>%
+                            mutate(Parr = predict(y,
+                                                  newdata = .),
+                                   Parr = exp(Parr))
+                        } else return(tibble(Spawners = NA,
+                                             Parr = NA))
+                      })) %>%
+  rename(est = tot_cap,
+         se = tot_cap_se) %>%
+  select(-c(area:tot_length, tot_cap_cv)) %>%
+  mutate(cv = se / est)
+
+
+# combine with other spawner recruit estimates
+data("spawn_rec_params")
+
+spawn_rec_params %<>%
+  bind_rows(qrf_params)
+
+# save complete table
+write_rds(spawn_rec_params,
+          path = "../data/derived_data/spawn_rec_params.rds")
 
 ```
 
