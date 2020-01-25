@@ -516,11 +516,18 @@ site_strata = pred_hab_sites_chnk %>%
   select(-site_num)
 
 # read in data from the CHaMP frame
-champ_frame_df = read_csv('../data/derived_data/champ_frame_data.csv') %>%
-  mutate(Target2014 = ifelse(is.na(AStrat2014), 'Non-Target', Target2014)) %>%
-  mutate(AStrat2014 = ifelse(AStrat2014 == 'Entiat IMW', paste('EntiatIMW', GeoRchIMW, sep = '_'), AStrat2014)) %>%
-  filter(Target2014 == 'Target') %>%
-  rename(Watershed = CHaMPshed)
+
+# read it in from .csv once, then save as .rds object (smaller in size)
+# champ_frame_df = read_csv('../data/derived_data/champ_frame_data.csv') %>%
+#   mutate(Target2014 = ifelse(is.na(AStrat2014), 'Non-Target', Target2014)) %>%
+#   mutate(AStrat2014 = ifelse(AStrat2014 == 'Entiat IMW', paste('EntiatIMW', GeoRchIMW, sep = '_'), AStrat2014)) %>%
+#   filter(Target2014 == 'Target') %>%
+#   rename(Watershed = CHaMPshed)
+# 
+# write_rds(champ_frame_df,
+#           "../data/derived_data/champ_frame_data.rds")
+
+champ_frame_df = read_rds("../data/derived_data/champ_frame_data.rds")
   
 # what strata do we have?
 frame_strata = champ_frame_df %>%
