@@ -353,6 +353,8 @@ qrf_data %>%
   adorn_totals() %>%
   adorn_pct_formatting() %>%
   # select(-percent) %>%
+  rename(`n Sites` = n,
+         Percent = percent) %>%
   kable(caption = 'The number of unique sites in the initial dataset, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity model')
 ```
 
@@ -374,10 +376,20 @@ qrf_mod$importance %>%
 ```
 
 ```{r gaa-table}
+tibble(Covariate = gaa_covars) %>%
+  mutate(Scale = if_else(Covariate %in% c('NatPrin1', 
+                                          'DistPrin1'),
+                         'Watershed (HUC12)',
+                         if_else(Covariate %in% c('WIDE_BF',
+                                                  'Channel_Type',
+                                                  'Elev_M'),
+                                 'Site (300 m)',
+                                 'Reach (2 km)'))) %>%
+  kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).")
 ```
 
 
-```{r extrap-r2-table}
+```{r, eval=F}
 mod_fit_df = model_svy_df %>%
   select(response, data) %>%
   unnest(cols = data) %>%
@@ -431,12 +443,12 @@ mod_fit_tab = mod_fit_df %>%
   nest() %>%
   mutate(comp_full = map(data,
                          .f = function(x) {
-                           lm(pred_full ~ obs,
+                           lm(pred_full ~ obs - 1,
                               data = x)
                          }),
          comp_no_champ = map(data,
                              .f = function(x) {
-                               lm(pred_no_champ ~ obs,
+                               lm(pred_no_champ ~ obs - 1,
                                   data = x)
                              })) %>%
   mutate(r2_full = map_dbl(comp_full,
@@ -472,6 +484,57 @@ kable(mod_fit_tab,
       caption = "Summary of model fit for each of the extrapolation models to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to larger scales (e.g., watershed, population).",
       digits = c(NA, NA, 3, 3))
 
+```
+
+```{r extrap-r2-table}
+model_svy_df %>%
+  ungroup() %>%
+  mutate(n_full = map_dbl(data,
+                          .f = nrow),
+         k_full = map_dbl(mod_full,
+                          .f = function(x) {
+                            names(x$coefficients)[!grepl('Intercept', names(x$coefficients))] %>%
+                              length
+                          }),
+         r_full = map_dbl(mod_full,
+                          .f = function(x) {
+                            cor(x$y, x$fitted.values)
+                          }),
+         r2_full = r_full^2,
+         r2_adj_full = 1 - ( ( (1 - r2_full) * (n_full - 1) ) / (n_full - k_full - 1) )) %>%
+  mutate(n_no_champ = map_dbl(data,
+                              .f = nrow),
+         k_no_champ = map_dbl(mod_no_champ,
+                              .f = function(x) {
+                                names(x$coefficients)[!grepl('Intercept', names(x$coefficients))] %>%
+                                  length
+                              }),
+         r_no_champ = map_dbl(mod_no_champ,
+                              .f = function(x) {
+                                cor(x$y, x$fitted.values)
+                              }),
+         r2_no_champ = r_no_champ^2,
+         r2_adj_no_champ = 1 - ( ( (1 - r2_no_champ) * (n_no_champ - 1) ) / (n_no_champ - k_no_champ - 1) )) %>%
+  select(response, starts_with("r2")) %>%
+  gather(type, r2, -response) %>%
+  mutate(model = if_else(grepl('no_champ', type),
+                         'non-CHaMP',
+                         'CHaMP'),
+         type = if_else(grepl('adj', type),
+                        'Adjusted R2',
+                        'R2')) %>%
+  spread(type, r2) %>%
+  mutate(response = recode(response,
+                           'chnk_per_m' = 'fish/m',
+                           'chnk_per_m2' = 'fish/m$^2$')) %>%
+  select(Model = model,
+         Response = response,
+         `$r^2$` = R2, 
+         `Adjusted $r^2$` = `Adjusted R2`) %>%
+  kable(caption = "Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.",
+        escape = F,
+        digits = c(NA, NA, 3, 3))
+  
 ```
 
 

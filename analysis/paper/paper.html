@@ -11,7 +11,7 @@
 
 <meta name="author" content="Kevin E. See1,✉, Michael W. Ackerman1, Richard A. Carmichael1, Sarah Hoffman1, and Chris Beasley1" />
 
-<meta name="date" content="2020-01-24" />
+<meta name="date" content="2020-01-27" />
 
 <title>Estimating Life-Stage Specific Habitat Capacity for Anadromous Salmonids using Quantile Random Forest Models</title>
 
@@ -375,7 +375,7 @@ summary {
 
 <h1 class="title toc-ignore">Estimating Life-Stage Specific Habitat Capacity for Anadromous Salmonids using Quantile Random Forest Models</h1>
 <h4 class="author">Kevin E. See<sup>1,✉</sup>, Michael W. Ackerman<sup>1</sup>, Richard A. Carmichael<sup>1</sup>, Sarah Hoffman<sup>1</sup>, and Chris Beasley<sup>1</sup></h4>
-<h4 class="date">January 24, 2020</h4>
+<h4 class="date">January 27, 2020</h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 Text of abstract
@@ -424,12 +424,12 @@ Text of abstract
 </div>
 <div id="extrapolating-to-other-sites" class="section level2">
 <h2><span class="header-section-number">2.5</span> Extrapolating to Other Sites</h2>
-<p>Using the QRF model, we made predictions of habitat capacity for juvenile rearing at all CHaMP sites within the interior Columbia River basin. However, fisheries biologists are more often interested in capacity at larger scales (e.g., watershed, population). To accomplish this, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) to scale our CHaMP site predictions to a series of larger spatial scales; often corresponding to the entirety of tributary habitat utilized by a given population. The GAA data used here was available from the list of GRTS master sample sites that the CHaMP sites were originally selected from (<strong><em>need citation</em></strong>). Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed. The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the svyglm function from the survey package <span class="citation">(Lumley 2019)</span> in R software <span class="citation">(R Core Team 2018)</span>. Models with all possible combination of GAAs were fit and all the models with cumulative Akaike weights less than 0.95 were model averaged to make predictions of capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. For sites outside of CHaMP watersheds, only extrapolation models that did not include watershed as a covariate were model averaged to make predictions. Summaries of extrapolation model fit are shown in Table <a href="#tab:extrap-r2-table">7.3</a>.</p>
+<p>Using the QRF model, we made predictions of habitat capacity for juvenile rearing at all CHaMP sites within the interior Columbia River basin. However, fisheries biologists are more often interested in capacity at larger scales (e.g., watershed, population). To accomplish this, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) to scale our CHaMP site predictions to a series of larger spatial scales; often corresponding to the entirety of tributary habitat utilized by a given population. The GAA data used here was available from the list of GRTS master sample sites that the CHaMP sites were originally selected from (<strong><em>need citation</em></strong>). Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed. The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the svyglm function from the survey package <span class="citation">(Lumley 2019)</span> in R software <span class="citation">(R Core Team 2018)</span>. Models with all possible combination of GAAs were fit and all the models with cumulative Akaike weights less than 0.95 were model averaged to make predictions of capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. For sites outside of CHaMP watersheds, only extrapolation models that did not include watershed as a covariate were model averaged to make predictions. Summaries of extrapolation model fit are shown in Table <a href="#tab:extrap-r2-table">7.4</a>.</p>
 <p>To summarize capacity at larger scales, the mean linear capacity (e.g., fish/m) of the master sample points along a particular tributary is multiplied by the length of that tributary. We first restricted the master sample points and lengths of streams to those with the domain of spring/summer Chinook, as defined by StreamNet (<a href="http://www.streamnet.org">http://www.streamnet.org</a> ) or using expert opinion from local biologists. The capacities of various tributaries could then be summed to estimate capacity at almost any spatial scale. However, for visualization, predictions of areal capacity (fish/m<span class="math inline">\(^2\)</span>) were used.</p>
 </div>
 <div id="model-validation" class="section level2">
 <h2><span class="header-section-number">2.6</span> Model Validation</h2>
-<p>Spawner-recruit data from several watersheds within the interior CRB were compiled to validate the extrapolated QRF estimates of spring/summer Chinook salmon parr capacity. Some watersheds had direct estimates of parr, while some had estimates of smolts and pre-smolts from rotary screw traps. For the latter, estimates of parr were calculated using estimates of over-winter survival. A series of spawner-recruit functions were then fit to this data including Beverton-Hold, Ricker, and hockey stick. Estimates of capacity were made from each of these spawner-recruit curves and compared with QRF estimates of capacity (Table <a href="#tab:sr-table">7.4</a>, Figure <a href="#fig:sr-figure">8.3</a>).</p>
+<p>Spawner-recruit data from several watersheds within the interior CRB were compiled to validate the extrapolated QRF estimates of spring/summer Chinook salmon parr capacity. Some watersheds had direct estimates of parr, while some had estimates of smolts and pre-smolts from rotary screw traps. For the latter, estimates of parr were calculated using estimates of over-winter survival. A series of spawner-recruit functions were then fit to this data including Beverton-Hold, Ricker, and hockey stick. Estimates of capacity were made from each of these spawner-recruit curves and compared with QRF estimates of capacity (Table <a href="#tab:sr-table">7.5</a>, Figure <a href="#fig:sr-figure">8.3</a>).</p>
 </div>
 </div>
 <div id="results" class="section level1">
@@ -619,8 +619,8 @@ Text of abstract
 <thead>
 <tr class="header">
 <th align="left">Watershed</th>
-<th align="right">n</th>
-<th align="left">percent</th>
+<th align="right">n Sites</th>
+<th align="left">Percent</th>
 </tr>
 </thead>
 <tbody>
@@ -776,7 +776,62 @@ Text of abstract
 </tbody>
 </table>
 <table>
-<caption><span id="tab:extrap-r2-table">Table 7.3: </span>Summary of model fit for each of the extrapolation models to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to larger scales (e.g., watershed, population).</caption>
+<caption><span id="tab:gaa-table">Table 7.3: </span>Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).</caption>
+<thead>
+<tr class="header">
+<th align="left">Covariate</th>
+<th align="left">Scale</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">TRange</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+<tr class="even">
+<td align="left">Elev_M</td>
+<td align="left">Site (300 m)</td>
+</tr>
+<tr class="odd">
+<td align="left">CHaMPsheds</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+<tr class="even">
+<td align="left">NatPrin1</td>
+<td align="left">Watershed (HUC12)</td>
+</tr>
+<tr class="odd">
+<td align="left">DistPrin1</td>
+<td align="left">Watershed (HUC12)</td>
+</tr>
+<tr class="even">
+<td align="left">SrtCumDrn</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+<tr class="odd">
+<td align="left">StrmPwr</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+<tr class="even">
+<td align="left">Slp_NHD_v1</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+<tr class="odd">
+<td align="left">Channel_Type</td>
+<td align="left">Site (300 m)</td>
+</tr>
+<tr class="even">
+<td align="left">WIDE_BF</td>
+<td align="left">Site (300 m)</td>
+</tr>
+<tr class="odd">
+<td align="left">S2_02_11</td>
+<td align="left">Reach (2 km)</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption><span id="tab:extrap-r2-table">Table 7.4: </span>Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.</caption>
 <thead>
 <tr class="header">
 <th align="left">Model</th>
@@ -789,31 +844,31 @@ Text of abstract
 <tr class="odd">
 <td align="left">CHaMP</td>
 <td align="left">fish/m</td>
-<td align="right">0.270</td>
-<td align="right">0.269</td>
+<td align="right">0.495</td>
+<td align="right">0.466</td>
 </tr>
 <tr class="even">
 <td align="left">non-CHaMP</td>
 <td align="left">fish/m</td>
-<td align="right">0.154</td>
-<td align="right">0.153</td>
+<td align="right">0.349</td>
+<td align="right">0.325</td>
 </tr>
 <tr class="odd">
 <td align="left">CHaMP</td>
 <td align="left">fish/m<span class="math inline">\(^2\)</span></td>
-<td align="right">0.314</td>
-<td align="right">0.312</td>
+<td align="right">0.542</td>
+<td align="right">0.516</td>
 </tr>
 <tr class="even">
 <td align="left">non-CHaMP</td>
 <td align="left">fish/m<span class="math inline">\(^2\)</span></td>
-<td align="right">0.214</td>
-<td align="right">0.213</td>
+<td align="right">0.404</td>
+<td align="right">0.383</td>
 </tr>
 </tbody>
 </table>
 <table>
-<caption><span id="tab:sr-table">Table 7.4: </span>Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.</caption>
+<caption><span id="tab:sr-table">Table 7.5: </span>Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.</caption>
 <thead>
 <tr class="header">
 <th align="left">Population</th>
@@ -926,7 +981,7 @@ Figure 8.3: Spawner-recruit data from seven watersheds. Solid lines are the spaw
 <div style="page-break-after: always;"></div>
 <div id="colophon" class="section level3">
 <h3><span class="header-section-number">8.0.1</span> Colophon</h3>
-<p>This report was generated on 2020-01-24 16:06:48 using the following computational environment and dependencies:</p>
+<p>This report was generated on 2020-01-27 10:48:15 using the following computational environment and dependencies:</p>
 <pre><code>#&gt; ─ Session info ───────────────────────────────────────────────────────────────
 #&gt;  setting  value                       
 #&gt;  version  R version 3.6.1 (2019-07-05)
@@ -937,7 +992,7 @@ Figure 8.3: Spawner-recruit data from seven watersheds. Solid lines are the spaw
 #&gt;  collate  en_US.UTF-8                 
 #&gt;  ctype    en_US.UTF-8                 
 #&gt;  tz       America/Los_Angeles         
-#&gt;  date     2020-01-24                  
+#&gt;  date     2020-01-27                  
 #&gt; 
 #&gt; ─ Packages ───────────────────────────────────────────────────────────────────
 #&gt;  package        * version    date       lib source        
@@ -1042,7 +1097,7 @@ Figure 8.3: Spawner-recruit data from seven watersheds. Solid lines are the spaw
 <p>The current Git commit details are:</p>
 <pre><code>#&gt; Local:    master /Users/seek/Documents/GitProjects/MyProjects/QRFpaper
 #&gt; Remote:   master @ origin (git@github.com:KevinSee/QRFpaper.git)
-#&gt; Head:     [f7be189] 2019-12-27: changed name of chunk for extrapolation r2 table</code></pre>
+#&gt; Head:     [6e4b955] 2020-01-25: added word doc from Sarah Hoffman with comments, suggestions, etc.</code></pre>
 </div>
 </div>
 
