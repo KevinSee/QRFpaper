@@ -1,0 +1,127 @@
+---
+title: "Create CHaMP map"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(knitr)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+# load packages for analysis
+library(tidyverse)
+library(janitor)
+library(magrittr)
+library(sf)
+library(ggrepel)
+
+# set default theme for ggplot
+theme_set(theme_bw())
+# setwd('analysis/R_scripts')
+```
+
+
+Start by looking at which watersheds we need polygon shapes for.
+
+```{r}
+fish_hab = read_rds("../data/derived_data/fish_hab.rds")
+model_svy_df = read_rds("../data/derived_data/model_svy_df.rds")
+```
+
+Watersheds with paired fish-habitat data:
+
+```{r}
+tabyl(fish_hab,
+      Watershed) %>%
+  adorn_pct_formatting()
+```
+
+Watersheds with CHaMP habitat data
+
+```{r}
+model_svy_df$data[[1]] %>%
+  tabyl(Watershed) %>%
+  adorn_pct_formatting()
+```
+
+Read in some HUC boundaries.
+
+```{r}
+huc3 = read_sf('~/OneDrive - Merck Sharp & Dohme, Corp/Data/WatershedBoundaries/WBDHU6.shp') %>%
+  select(STATES:NAME) %>%
+  st_transform(crs = 5070)
+huc4 = read_sf('~/OneDrive - Merck Sharp & Dohme, Corp/Data/WatershedBoundaries/WBDHU8.shp') %>%
+  select(STATES:NAME) %>%
+  st_transform(st_crs(huc3))
+huc5 = read_sf('~/OneDrive - Merck Sharp & Dohme, Corp/Data/WatershedBoundaries/WBDHU10.shp') %>%
+  select(STATES:NAME) %>%
+  st_transform(st_crs(huc3))
+
+# filter(huc4,
+#        grepl('Methow', NAME)) %>%
+#   select(NAME) %>% plot()
+
+champ_wtsds = huc3 %>%
+  filter(NAME %in% c('John Day')) %>%
+  select(NAME) %>%
+  rbind(huc4 %>%
+          filter(NAME %in% c('Lemhi',
+                             'Methow',
+                             'Wenatchee',
+                             'South Fork Salmon',
+                             'Upper Grande Ronde')) %>%
+          select(NAME)) %>%
+  rbind(huc5 %>%
+          filter(NAME %in% c('Minam River',
+                             'Secesh River',
+                             'Yankee Fork')) %>%
+          select(NAME) %>%
+          mutate(NAME = str_remove(NAME, ' River$'))) %>%
+  rbind(huc5 %>%
+          filter(NAME %in% c('Entiat River',
+                             'Mad River')) %>%
+          st_union() %>%
+          st_sf() %>%
+          mutate(NAME = 'Entiat')) %>%
+  rbind(huc5 %>%
+          filter(grepl('Tucannon', NAME)) %>%
+          st_union() %>%
+          st_sf() %>%
+          mutate(NAME = 'Tucannon')) %>%
+  arrange(NAME) %>%
+  mutate(id = 1:n(),
+         hab_data = T,
+         fish_data = if_else(NAME %in% c('Secesh', as.character(unique(fish_hab$Watershed))),
+                             T, F),
+         fish_data = if_else(NAME == 'South Fork Salmon', F, fish_data))
+
+```
+
+Test a plot
+
+```{r}
+ggplot(data = champ_wtsds) +
+  geom_sf() +
+  geom_sf(data = champ_wtsds %>%
+            filter(fish_data),
+          fill = 'black') +
+  geom_sf_label(aes(label = id),
+                position = position_dodge(width = 200)) +
+                # position = position_nudge(x = 5000,
+                #                           y = -5000)) +
+  theme(axis.title = element_blank())
+  
+```
+
+Looks good. Let's save the polygon sf to use later.
+
+```{r}
+write_rds(champ_wtsds,
+          path = '../data/derived_data/champ_wtds.rds')
+```
+
