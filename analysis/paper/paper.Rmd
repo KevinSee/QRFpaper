@@ -51,6 +51,8 @@ bibliography:
 - packages.bib
 csl: "../templates/ecological-applications.csl" # Insert path for the bib-style
 abstract: |
+  Needs more...
+  
   The QRF model presented here provided estimates of habitat carrying capacity for Chinook salmon parr during the summer months, at both the site and watershed scale. Total capacity estimates for watersheds closely matched estimates from alternative fish productivity models. Carrying capacity estimates based on QRF, like those presented here, provide managers a framework to guide the identification, prioritization, and development of habitat rehabilitation actions to recover salmon populations. 
 keywords: |
   carrying capacity; quantile regression; random forests; Chinook; quantile regression forest
@@ -373,6 +375,7 @@ Development of a standardized protocol to incorporate remotely sensed data (LiDA
 
 ## Conclusions and Next Steps
 
+<!-- Consider pulling back and thinking about whether these kinds of techniques could be applied to other systems (terrestial, ocean, etc.). If not, we may want to target a more fisheries-centric journal -->
 
 # Acknowledgements
 
