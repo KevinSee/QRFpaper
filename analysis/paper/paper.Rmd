@@ -44,10 +44,10 @@ output:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks2.lua
       - --lua-filter=../templates/pagebreak.lua
-# bibliography: references.bib
 bibliography:
-- /Users/seek/OneDrive - Merck Sharp & Dohme, Corp/Bibliography/Research.bib
-- /Users/seek/OneDrive - Merck Sharp & Dohme, Corp/Bibliography/SoftwareCitations.bib
+# - /Users/seek/OneDrive - Merck Sharp & Dohme, Corp/Bibliography/Research.bib
+# - /Users/seek/OneDrive - Merck Sharp & Dohme, Corp/Bibliography/SoftwareCitations.bib
+- references.bib
 - packages.bib
 csl: "../templates/ecological-applications.csl" # Insert path for the bib-style
 abstract: |
@@ -80,6 +80,7 @@ library(QRFpaper)
 library(janitor)
 library(knitr)
 library(magrittr)
+library(sf)
 
 theme_set(theme_bw())
 
@@ -111,6 +112,7 @@ mod_data_weights = read_rds("../data/derived_data/mod_data_weights.rds")
 all_preds = read_rds("../data/derived_data/all_preds.rds")
 spawn_rec_params = read_rds("../data/derived_data/spawn_rec_params.rds")
 model_svy_df = read_rds("../data/derived_data/model_svy_df.rds")
+champ_wtsds = read_rds("../data/derived_data/champ_wtds.rds")
 ```
 
 ```{r sp-rec-comp}
@@ -263,13 +265,13 @@ This manuscript incorporates multiple measures of stream habitat to estimate fis
 
 ## Study Site
 
-Fish and habitat data used in our study were collected from nine watersheds within the interior Columbia River Basin (CRB), Pacific Northwest, USA (**Figure ??**). The CRB covers more than 668,000 km$^2$ draining large portions of Idaho, Oregon, and Washington, and smaller portions of Montana, Nevada, Utah, and Wyoming, as well as the southeastern portion of British Columbia. The habitat data used to populate the QRF model were collected by the Columbia Habitat Monitoring Program (CHaMP) [@Volk2017] and were downloaded from https://www.champmonitoring.org. Data from the following `r n_distinct(hab_data$Watershed)` CHaMP watersheds were used in this study: `r paste(sort(unique(hab_data$Watershed))[-length(unique(hab_data$Watershed))], collapse = ', ')` and `r sort(unique(hab_data$Watershed))[length(unique(hab_data$Watershed))]`. Juvenile density and abundance data were collected in a subset of `r n_distinct(fish_hab$Watershed)` watersheds, at CHaMP survey reaches and were graciously provided by a number of projects, including the Integrated Status and Effectiveness Monitoring Project [@Volk2017].
+Fish and habitat data used in our study were collected from eleven watersheds within the interior Columbia River Basin (CRB), Pacific Northwest, USA (Figure \@ref(fig:wtsd-map)). The CRB covers more than 668,000 km$^2$ draining large portions of Idaho, Oregon, and Washington, and smaller portions of Montana, Nevada, Utah, and Wyoming, as well as the southeastern portion of British Columbia. The habitat data used to populate the QRF model were collected by the Columbia Habitat Monitoring Program (CHaMP) [@Volk2017] and were downloaded from https://www.champmonitoring.org. Data from the following `r n_distinct(hab_data$Watershed)` CHaMP watersheds were used in this study: `r paste(sort(unique(hab_data$Watershed))[-length(unique(hab_data$Watershed))], collapse = ', ')` and `r sort(unique(hab_data$Watershed))[length(unique(hab_data$Watershed))]`. Juvenile density and abundance data were collected in a subset of `r n_distinct(fish_hab$Watershed)` watersheds, at CHaMP survey reaches and were graciously provided by a number of projects, including the Integrated Status and Effectiveness Monitoring Project [@Volk2017].
 
 ## Data
 
 CHaMP sites are 200 m to 500 m reaches within wadeable streams across select basins within the interior Columbia River Basin (CRB) selected based on a spatially balanced Generalized Random Tesselation Stratified (GRTS) sample selection algorithm [@Stevens1999; @Stevens2004]. Habitat data within CHaMP sites were collected using the CHaMP protocol [@CHaMP2016] which calls for field data collection during the low-flow period, typically from June through October. CHaMP habitat data include, but are not limited to, measurements describing channel complexity, channel units, disturbance, fish cover, large woody debris, riparian cover, size (depth, width, discharge), substrate, temperature, and water quality. 
 
-Juvenile fish surveys were conducted for sp/sum Chinook salmon parr during the summer low-flow season at many of the same sites surveyed using the CHaMP protocol. Survey methods included mark-recapture, three-pass removal sampling, two-pass removal sampling, and single-pass electrofishing, as well as snorkeling. These data were used to estimate sp/sum Chinook salmon parr abundance at all CHaMP sites where fish survey data were available. Three-pass removal estimates used the Carle-Strub estimator [@Carle1978], following advice from @Hedger2013. Two-pass removal estimates used the estimator described by @Seber2002. Mark-recapture estimates used Chapman’s modified Lincoln-Peterson estimator [@Chapman1951] and were deemed valid if they met the criteria described in @Robson1964. These estimates were made using the *removal* function from the *FSA* package [@R-FSA] or the *closedp.bc* function from the *Rcapture* package [@R-Rcapture] in R software [@Rsoftware2018]. Snorkel counts were transformed to abundance estimates using paired snorkel-electrofishing sites to calibrate snorkel counts. For sites with invalid estimates or that were sampled with a single electrofishing pass, we developed an estimate of capture probability based on valid estimates, using a binomial generalized linear mixed effects model. Fixed effects were species, wetted width of the site, density of fish caught on the first pass and all possible two-way interactions. We included a random effect for fish crew / watershed. We used this model to predict abundances based on the number of fish caught on the first pass and any other covariates.
+Juvenile fish surveys were conducted for sp/sum Chinook salmon parr during the summer low-flow season at many of the same sites surveyed using the CHaMP protocol. Survey methods included mark-recapture, three-pass removal sampling, two-pass removal sampling, and single-pass electrofishing, as well as snorkeling. These data were used to estimate sp/sum Chinook salmon parr abundance at all CHaMP sites where fish survey data were available. Three-pass removal estimates used the Carle-Strub estimator [@Carle1978], following advice from @Hedger2013. Two-pass removal estimates used the estimator described by @Seber2002. Mark-recapture estimates used Chapman’s modified Lincoln-Peterson estimator [@Chapman1951] and were deemed valid if they met the criteria described in @Robson1964. These estimates were made using the *removal* function from the *FSA* package [@R-FSA] or the *closedp.bc* function from the *Rcapture* package [@R-Rcapture] in R software [@Rsoftware2019]. Snorkel counts were transformed to abundance estimates using paired snorkel-electrofishing sites to calibrate snorkel counts. For sites with invalid estimates or that were sampled with a single electrofishing pass, we developed an estimate of capture probability based on valid estimates, using a binomial generalized linear mixed effects model. Fixed effects were species, wetted width of the site, density of fish caught on the first pass and all possible two-way interactions. We included a random effect for fish crew / watershed. We used this model to predict abundances based on the number of fish caught on the first pass and any other covariates.
 
 Abundance estimates at all sites were then translated into linear (parr/m) fish densities which were paired with the associated CHaMP habitat data. For sites that were sampled in multiple years, only the fish and habitat data from the year with the highest observed fish density was retained to avoid possible pseudo-replication, while remaining consistent with our goal of estimating carrying capacity. After removing duplicate samples, our initial dataset contained `r n_distinct(fish_hab$Site)` unique sites with paired fish-habitat data (Table \@ref(tab:fh-samp-table)). 
 
@@ -279,17 +281,17 @@ A key step in developing a QRF model to predict fish capacities was selecting th
 
 To prevent overfitting, we pared down the more than 100 metrics generated by the CHaMP protocol describing the quantity and quality of fish habitat for each survey site. To assist in determining the habitat metrics to include in the QRF model, we used the Maximal Information-Based Nonparametric Exploration (MINE) class of statistics [@Reshef2011] to determine those habitat characteristics (covariates) most highly associated with observed parr densities. We calculated the maximal information coefficient (MIC), using the R package *minerva* [@R-minerva], to measure the strength of the linear or non-linear association between two variables [@Reshef2011]. The MIC value between each of the measured habitat characteristics and parr density was used to inform decisions on which habitat covariates to include in the QRF parr capacity model.
 
-Habitat metrics were first grouped into broad categories that included channel unit, complexity, cover, disturbance, riparian, size, substrate, temperature, water quality, and woody debris. Habitat metrics measuring volume and area were scaled to the wetted area of each site. Within each category, metrics were ranked according to their MIC value (**Figure ??**). Our strategy was to select one or two variables with the highest MIC score within each category so that covariates describe different aspects of rearing habitat (e.g., substrate, temperature, etc.). Additionally, we attempted to avoid covariates that were highly correlated (***Figure ??***) while including covariates that can be directly influenced by restoration actions or have been shown to impact salmonid juvenile density. 
+Habitat metrics were first grouped into broad categories that included channel unit, complexity, cover, disturbance, riparian, size, substrate, temperature, water quality, and woody debris. Habitat metrics measuring volume and area were scaled to the wetted area of each site. Within each category, metrics were ranked according to their MIC value (**Figure ??**). Our strategy was to select one or two variables with the highest MIC score within each category so that covariates describe different aspects of rearing habitat (e.g., substrate, temperature, etc.). Additionally, we attempted to avoid covariates that were highly correlated (**Figure ??**) while including covariates that can be directly influenced by restoration actions or have been shown to impact salmonid juvenile density. 
 
 ## QRF Model Fit
 
-Using the selected habitat covariates (Table \@ref(tab:select-mets-table)), we fit a QRF model to predict habitat rearing capacity for spring/summer Chinook salmon parr, during summer months. After constructing a random forest, predictions of the mean response can be made by averaging the predictions of all trees, similar to the expected value predictions from a statistical regression model. However, the individual predictions from each tree, viewed collectively, describe the entire distribution of the predicted response, therefore, the random forest model can be used in the same way as other quantile regression methods to predict any quantile of the response. There were missing values for some habitat data; thus, any site visit with more than three missing covariates was removed from the dataset and the remaining missing habitat values were imputed using the *missForest* R package [@R-missForest; @Stekhoven2012; @Stekhoven2013]. We fit the QRF models using the *quantregForest* function from the *quantregForest* package [@R-quantregForest] in R software [@Rsoftware2018], incorporating data from `r nrow(qrf_data)` records (paired fish-habitat data) and `r nrow(sel_hab_mets)` habitat covariates (`r round(nrow(qrf_data) / nrow(sel_hab_mets), 1)` data points per covariate) (Table \@ref(tab:select-mets-table)). The 90th quantile of the predicted distribution was used as a proxy for carrying capacity, following the suggestion of @Sweka2010. We used the 90th quantile, rather than a higher quantile, to avoid using predictions that are aimed at the very upper tails of observed fish density, where the variability of predictions may be influenced by sample size issues.
+Using the selected habitat covariates (Table \@ref(tab:select-mets-table)), we fit a QRF model to predict habitat rearing capacity for spring/summer Chinook salmon parr, during summer months. After constructing a random forest, predictions of the mean response can be made by averaging the predictions of all trees, similar to the expected value predictions from a statistical regression model. However, the individual predictions from each tree, viewed collectively, describe the entire distribution of the predicted response, therefore, the random forest model can be used in the same way as other quantile regression methods to predict any quantile of the response. There were missing values for some habitat data; thus, any site visit with more than three missing covariates was removed from the dataset and the remaining missing habitat values were imputed using the *missForest* R package [@R-missForest; @Stekhoven2012]. We fit the QRF models using the *quantregForest* function from the *quantregForest* package [@R-quantregForest] in R software [@Rsoftware2019], incorporating data from `r nrow(qrf_data)` records (paired fish-habitat data) and `r nrow(sel_hab_mets)` habitat covariates (`r round(nrow(qrf_data) / nrow(sel_hab_mets), 1)` data points per covariate) (Table \@ref(tab:select-mets-table)). The 90th quantile of the predicted distribution was used as a proxy for carrying capacity, following the suggestion of @Sweka2010. We used the 90th quantile, rather than a higher quantile, to avoid using predictions that are aimed at the very upper tails of observed fish density, where the variability of predictions may be influenced by sample size issues.
 
 After model fitting, the QRF model was then be used to predict capacity using measurements of the habitat covariates that were used to fit the model. In our case, this includes all sites within CHaMP basins in the interior Columbia River basin. For CHaMP sites that have been sampled in multiple years, we first calculated the mean for each habitat metric among years to make predictions. In total, we generated `r filter(all_preds, is.na(chnk_per_m_se)) %>% summarise(n_sites = n_distinct(Site)) %>% pull(n_sites)` predictions of spring/summer Chinook salmon parr capacity, during summer months, for the following basins: Entiat, Grande Ronde (including Minam), John Day, Lemhi, Methow, South Fork Salmon, Tucannon, Wenatchee and Yankee Fork.
 
 ## Extrapolating to Other Sites
 
-Using the QRF model, we predicted habitat capacity for juvenile rearing at all CHaMP sites within the interior Columbia River basin. To predict capacity at larger spatial scales, such as the watershed or population, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) which were available for the entirety of tributary habitat utilized by a given population. The GAA data used here was taken from the list of GRTS master sample sites that the CHaMP sites were originally selected from (***need citation***). Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed (Table \@ref(tab:gaa-covars)). The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the *svyglm* function from the *survey* package [@R-survey] in R software [@Rsoftware2018]. We fit two extrapolation models to each type of fish density, one that included watershed as covariate, for use in predicting capacity within CHaMP watersheds, and one that did not, for predicting everywhere else. We then made predictions of linear and areal capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. Summaries of extrapolation model fit are shown in Table \@ref(tab:extrap-r2-table).
+Using the QRF model, we predicted habitat capacity for juvenile rearing at all CHaMP sites within the interior Columbia River basin. To predict capacity at larger spatial scales, such as the watershed or population, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) which were available for the entirety of tributary habitat utilized by a given population. The GAA data used here was taken from the list of GRTS master sample sites that the CHaMP sites were originally selected from (***need citation***). Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed (Table \@ref(tab:gaa-covars)). The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the *svyglm* function from the *survey* package [@R-survey] in R software [@Rsoftware2019]. We fit two extrapolation models to each type of fish density, one that included watershed as covariate, for use in predicting capacity within CHaMP watersheds, and one that did not, for predicting everywhere else. We then made predictions of linear and areal capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. Summaries of extrapolation model fit are shown in Table \@ref(tab:extrap-r2-table).
 
 To summarize capacity at larger scales, the mean linear capacity (e.g., fish/m) of the master sample points along a particular tributary is multiplied by the length of that tributary. We first restricted the master sample points and lengths of streams to those with the domain of spring/summer Chinook, as defined by StreamNet ([http://www.streamnet.org](http://www.streamnet.org) ) or using expert opinion from local biologists. The capacities of various tributaries could then be summed to estimate capacity at almost any spatial scale. However, for visualization, predictions of areal capacity (fish/m$^2$) were used. 
 
@@ -305,7 +307,7 @@ We categorized 145 habitat measurements collected using the CHaMP habitat protoc
 
 ## QRF Model
 
-A QRF model was fit using `r nrow(sel_hab_mets)` habitat covariates (Table \@ref(tab:select-mets-table)) and the *quantregForest* package [@Meinshausen2006] in R [@Rsoftware2018] and the 90th quantile of the predicted distribution was used as a proxy for carrying capacity. After model fit, we examined the relative importance of each habitat covariate included in the model (Figure \@ref(fig:rel-imp-figure)). Moreover, QRF models allow one to visually examine the marginal effect of each habitat covariate on the quantile of interest using partial dependence plots (PDP). These plots show the marginal effect of changing a single habitat covariate while maintaining all other covariates at their mean values (Figure \@ref(fig:pdp-figure)). However, given that many habitat metrics are somewhat correlated, these marginal effects are not independent of one another making the interpretation of partial dependence plots less straightforward. After model fitting, the QRF model was used to predict habitat capacity at all CHaMP sites within the interior Columbia River basin. 
+A QRF model was fit using `r nrow(sel_hab_mets)` habitat covariates (Table \@ref(tab:select-mets-table)) and the *quantregForest* package [@Meinshausen2006] in R [@Rsoftware2019] and the 90th quantile of the predicted distribution was used as a proxy for carrying capacity. After model fit, we examined the relative importance of each habitat covariate included in the model (Figure \@ref(fig:rel-imp-figure)). Moreover, QRF models allow one to visually examine the marginal effect of each habitat covariate on the quantile of interest using partial dependence plots (PDP). These plots show the marginal effect of changing a single habitat covariate while maintaining all other covariates at their mean values (Figure \@ref(fig:pdp-figure)). However, given that many habitat metrics are somewhat correlated, these marginal effects are not independent of one another making the interpretation of partial dependence plots less straightforward. After model fitting, the QRF model was used to predict habitat capacity at all CHaMP sites within the interior Columbia River basin. 
 
 ## Extrapolating to Other Sites
 
@@ -364,7 +366,7 @@ Despite these considerations, we were able to leverage extensive datasets to pro
 
 <!-- I have no idea if this is what you are looking for so feel free to delete if I am way off base.  -->
 
-Given the cost/extent of data necessary for QRF extrapolation in watersheds outside of the CRB, there is a pressing need to develop new tools for habitat analyses.  Unmanned Aerial Systems (UAS or drone, commonly) are gaining popularity in wildlife and ecosystem monitoring for their ease of use, safety, accessibility, and cost-efficiency [@Jones2006; @Chabot2015]. UAS produce high-resolution, permanent data at a fraction of the cost of on-the-ground habitat sampling. Advances in imaging techniques (e.g., multispectral imaging) and post processing (e.g., automation of data collection from imagery) are already demonstrating increase in the efficiency and accuracy of data collection [@Whitehead2014; @LeCun2015; @Weinstein2017]. 
+Given the cost/extent of data necessary for QRF extrapolation in watersheds outside of the CRB, there is a pressing need to develop new tools for habitat analyses.  Unmanned Aerial Systems (UAS or drone, commonly) are gaining popularity in wildlife and ecosystem monitoring for their ease of use, safety, accessibility, and cost-efficiency [@Jones2006; @Chabot2015]. UAS produce high-resolution, permanent data at a fraction of the cost of on-the-ground habitat sampling. Advances in imaging techniques (e.g., multispectral imaging) and post processing (e.g., automation of data collection from imagery) are already demonstrating increase in the efficiency and accuracy of data collection [@Whitehead2014; @LeCun2015; @Weinstein2018]. 
 
 Development of a standardized protocol to incorporate remotely sensed data (LiDAR, aerial imagery) into the collection of habitat metrics would greatly improve the broadscale application of QRF. Rapid advances drone technology further improves upon traditional habitat data collection by leveraging 1) sub-meter global navigation satellite system (GNSS) receivers; 2) cost-effective drone imagery collection, image stitching, and photogrammetry; and 3) semi-automated data post-processing. All data collection efforts would be georeferenced and topologically compatible to increase repeatability of methods and data collection locations; a primary criticism of previous CHaMP survey efforts. The implementation of such a protocol would circumvent the need to extrapolate by collecting data for individual channel units in a rapid manner using remote sensing technologies, thereby reducing labor, providing a cost-effective tool for habitat data collection supporting status and trend evaluation and model products to better inform habitat restoration prioritization and planning.
 
@@ -386,6 +388,8 @@ Model development efforts have been funded by the Bonneville Power Administratio
 \newpage
 
 # Tables
+
+<div id="tables"></div>
 
 ```{r fh-samp-table}
 qrf_data %>%
@@ -418,7 +422,7 @@ qrf_mod$importance %>%
 
 <!-- Need to flesh out this table with better names, and add units as a column -->
 
-```{r gaa-table}
+```{r gaa-covars}
 tibble(Covariate = gaa_covars) %>%
   mutate(Scale = if_else(Covariate %in% c('NatPrin1', 
                                           'DistPrin1'),
@@ -519,7 +523,22 @@ spawn_rec_params %>%
 
 # Figures
 
-<!-- We need to make a map of the Columbia River basin that includes polygons for each of the CHaMP watersheds. -->
+<div id="figures"></div>
+
+```{r wtsd-map, fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
+ggplot(data = champ_wtsds) +
+  geom_sf() +
+  geom_sf(data = champ_wtsds %>%
+            filter(fish_data),
+          fill = 'black') +
+  geom_sf_label(aes(label = id),
+                position = position_dodge(width = 200)) +
+                # position = position_nudge(x = 5000,
+                #                           y = -5000)) +
+  theme(axis.title = element_blank())
+```
+
+
 
 ```{r rel-imp-figure, fig.cap = "Relative importance of each habitat covariate included in the quantile regression forest (QRF) model to predict habitat capacity, during summer months, for spring/summer Chinook salmon parr"}
 qrf_mod$importance %>%
