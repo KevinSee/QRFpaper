@@ -327,8 +327,6 @@ Historically, fish-habitat relationship models have focused on species distribut
 
 <!-- Talk about how the gold standard of carrying capacity estimates are spawner-recruit curves, and our validation exercise shows that QRF is getting similar answers. Then we can contrast the data needs for both approaches, and how spawner-recruit analyses don't tell you how capacity is related to habitat. -->
 
-Kevin went blah blah blah here.
-
 ## Biological Expectations from QRF Model
 
 The results of the QRF parr capacity model for spring/summer Chinook salmon meet many biological expectations.
