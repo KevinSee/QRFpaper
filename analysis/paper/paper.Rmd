@@ -25,21 +25,21 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
-    bookdown::word_document2:
+    bookdown::pdf_document2:
       fig_caption: yes
-      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks2.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::pdf_document2:
+    bookdown::html_document2:
       fig_caption: yes
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::html_document2:
+    bookdown::word_document2:
       fig_caption: yes
+      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
@@ -79,10 +79,16 @@ library(tidyverse)
 library(QRFpaper)
 library(janitor)
 library(knitr)
+library(pander)
 library(magrittr)
 library(sf)
 
 theme_set(theme_bw())
+
+panderOptions("big.mark", ',')
+
+options(knitr.kable.NA = '-')
+options(knitr.table.format = "pandoc")
 
 # setwd('analysis/paper')
 ```
@@ -387,16 +393,17 @@ Model development efforts have been funded by the Bonneville Power Administratio
 
 <div id="tables"></div>
 
-```{r fh-samp-table}
+```{r }
 qrf_data %>%
-  # filter(Year <= 2014) %>%
   tabyl(Watershed) %>%
   adorn_totals() %>%
   adorn_pct_formatting() %>%
-  # select(-percent) %>%
   rename(`n Sites` = n,
          Percent = percent) %>%
-  kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model')
+  pander(caption = "(\\#tab:fh-samp-table)The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model.")
+  # kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model',
+  #       booktabs = T)
+  
 ```
 
 ```{r select-mets-table}
@@ -412,8 +419,11 @@ qrf_mod$importance %>%
          Metric = Name,
          `Metric Category` = MetricCategory,
          Description = DescriptiveText) %>%
-  kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.",
-        format.args = list(width = c(2, 10, 10, 50)))
+  pander(caption = "(\\#tab:select-mets-table) Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.")
+  # kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.",
+  #       booktabs = T,
+  #       format.args = list(width = c(2, 10, 10, 50)))
+  
 ```
 
 <!-- Need to flesh out this table with better names, and add units as a column -->
@@ -428,7 +438,9 @@ tibble(Covariate = gaa_covars) %>%
                                                   'Elev_M'),
                                  'Site (300 m)',
                                  'Reach (2 km)'))) %>%
-  kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).")
+  pander(caption = "(\\#tab:gaa-covars)Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).")
+  # kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).",
+  #       booktabs = T)
 ```
 
 ```{r extrap-r2-table}
@@ -476,9 +488,11 @@ model_svy_df %>%
          Response = response,
          `$r^2$` = R2, 
          `Adjusted $r^2$` = `Adjusted R2`) %>%
-  kable(caption = "Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.",
-        escape = F,
-        digits = c(NA, NA, 3, 3))
+  pander(caption = "(\\#tab:extrap-r2-table)Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.")
+  # kable(caption = "Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.",
+  #       escape = F,
+  #       booktabs = T,
+  #       digits = c(NA, NA, 3, 3))
   
 ```
 
@@ -511,7 +525,8 @@ spawn_rec_params %>%
                                               'QRF'))) %>%
               spread(form, prnt_val)) %>%
   filter(Population %in% keep_wtsds) %>%
-  kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
+  pander(caption = "(\\#tab:sr-table)Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
+  # kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
 
 ```
 
