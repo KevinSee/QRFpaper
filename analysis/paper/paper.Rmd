@@ -321,11 +321,14 @@ Estimates of Chinook salmon parr capacity from the QRF and extrapolation models 
 
 In this study, we developed a novel approach to estimate the capacity of habitat to support Chinook salmon parr during summer months in wadeable streams. Our model can be used to quantify juvenile rearing capacity in Chinook salmon watersheds or populations and, in turn, quantify the magnitude of tributary habitat rehabilitation necessary to support Endangered Species Act (ESA) delisting. The QRF and extrapolation models presented here provide useful tools towards the prioritization, implementation, and evaluation of habitat restoration actions to recover depleted salmon populations. Moreover, the models presented here can be applied to multiple stages within the life cycle (e.g., parr, smolt, adult). Estimates of habitat carrying capacity for multiple life stages will allow biologists and managers to identify what life stage specific habitat is limiting. For example, QRF models and associated extrapolation models may demonstrate that habitat for a given population is sufficient to support adult spawning required for ESA delisting, but that juvenile capacity may not be sufficient to support those levels of adult spawning. In such a case, habitat restoration actions may be most cost-effectively and sustainably directed towards juvenile rearing habitat. Models to estimate habitat carrying capacity for multiple life stages will help to better direct habitat restoration actions.
 
-## What Models Are Currently Available?
+## What Watershed-scale Capacity Models Are Currently Available?
 
 Historically, fish-habitat relationship models have focused on species distribution or average abundance/density rather than directly addressing carrying capacity. The QRF approach employed here allows for the analysis of multiple correlated habitat metrics, often with non-linear relationships to fish density, in order to assess fish habitat relationships for higher quantiles that are assumed to represent carrying capacity. 
 
 <!-- Talk about how the gold standard of carrying capacity estimates are spawner-recruit curves, and our validation exercise shows that QRF is getting similar answers. Then we can contrast the data needs for both approaches, and how spawner-recruit analyses don't tell you how capacity is related to habitat. -->
+
+<!-- Somewhere in here, mention how data can be collected over a short time span, if enough spatial variation is captured. Or dataset can be built over time, sampling different locations (but be vary of possible year effects, maybe). -->
+
 
 ## Biological Expectations from QRF Model
 
@@ -333,14 +336,7 @@ The results of the QRF parr capacity model for spring/summer Chinook salmon meet
 
 <!-- Discussion of biological expectations and PDP plots… -->
 
-## Model Assumptions
-
-<!-- Somewhere in here, mention how data can be collected over a short time span, if enough spatial variation is captured. Or dataset can be built over time, sampling different locations (but be vary of possible year effects, maybe). -->
-
-Model assumptions should always be considered when interpreting results; the following assumptions were made when modeling habitat capacity using QRF methods. First, we assumed that sites with higher carrying capacity (i.e., ‘better’ habitat) contain more parr during fish surveys. Second, we assumed that carrying capacity is a function of habitat. Third, we assumed that estimates of parr densities from fish surveys are unbiased. Fourth, we assumed that at least some sites in our dataset were at or close to local carrying capacity at the site level. However, if this fourth assumption is not met, we will obtain a conservative estimate of carrying capacity (but the framework of the model is not wrong). Finally, we assumed that the 90th quantile of predictions at each CHaMP site is a reasonable proxy for carrying capacity. With insufficient data, it is difficult to get a well-defined estimate of higher quantiles because substantial amounts of data are necessary to define the tails of a distribution. 
-	
-<!-- This paragraph needs to be hashed out.	 -->
-Assumptions we don’t need to make. Because QRF naturally incorporates non-linear relationships between predictor and response variables, we make no assumptions regarding the shape of fish-habitat relationships. Rather, fish-habitat relationships are estimated from the data with no *a priori* constraints. Moreover, we make no assumptions regarding correlations among habitat covariates; the random forest framework accounts for possible interactions between habitat metrics, so we don’t need to explicitly place them in the model.
+<!-- Try to include images of high capacity / low capacity sites  -->
 
 ## Extrapolation Model
 
