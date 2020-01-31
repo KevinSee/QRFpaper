@@ -540,16 +540,36 @@ spawn_rec_params %>%
 <div id="figures"></div>
 
 ```{r wtsd-map, fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
+river_lines = QRFcapacity::get_flowlines(stream_order = 6,
+                                         champ_wtsds %>%
+                                           st_union() %>%
+                                           st_make_grid(n = 1)) %>%
+            filter(!grepl('^1701', reachcode),
+                   !grepl('^171', reachcode))
+
+# river_lines %>%
+#   filter(!gnis_name %in% c('Deschutes River',
+#                            'Crooked River',
+#                            'Payette River',
+#                            'North Fork Payette River')) %>%
+#   ggplot() +
+#   geom_sf(aes(color = gnis_name))
+
 ggplot(data = champ_wtsds) +
+  geom_sf(data = river_lines %>%
+            filter(!gnis_name %in% c('Deschutes River',
+                                     'Crooked River',
+                                     'Payette River',
+                                     'North Fork Payette River')),
+          color = 'darkblue') +
   geom_sf() +
   geom_sf(data = champ_wtsds %>%
             filter(fish_data),
           fill = 'black') +
   geom_sf_label(aes(label = id),
                 position = position_dodge(width = 200)) +
-                # position = position_nudge(x = 5000,
-                #                           y = -5000)) +
   theme(axis.title = element_blank())
+
 ```
 
 
