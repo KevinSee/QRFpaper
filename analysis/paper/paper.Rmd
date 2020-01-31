@@ -13,7 +13,7 @@ author:
       email: Richie.Carmichael@biomark.com
       institute: [biomark]
       correspondence: false
-  - Sarah Hoffman:
+  - Sarah L. Hoffmann:
       email: Sarah.Hoffman@biomark.com
       institute: [biomark]
       correspondence: false
