@@ -14,7 +14,7 @@ author:
       institute: [biomark]
       correspondence: false
   - Sarah L. Hoffmann:
-      email: Sarah.Hoffman@biomark.com
+      email: Sarah.Hoffmann@biomark.com
       institute: [biomark]
       correspondence: false
   - Chris Beasley:
