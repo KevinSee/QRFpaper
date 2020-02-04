@@ -101,7 +101,7 @@ hab_data %<>%
 
 ```
 
-All sites fell within the range of steelhead, but many of them were outside the range of spring/summer Chinook salmon. However, defining the range of sp/su Chinook is tricky, and it is unclear if the reported data for Chinook salmon includes only sites considered with the range of Chinook, or if we should exclude data from some sites based on our best understanding of the species' range. Currently, we are excluding sites outside the Chinook domain. We created our own list of sites in the John Day that were within a Chinook domain, based on which sites Chinook were found at some point (and downstream of those).
+All sites fell within the range of steelhead, but many of them were outside the range of spring/summer Chinook salmon. However, defining the range of sp/su Chinook is tricky, and it is unclear if the reported data for Chinook salmon includes only sites considered with the range of Chinook, or if we should exclude data from some sites based on our best understanding of the species' range. Currently, we are excluding sites outside the Chinook domain. 
 
 ```{r chnk-domain-filter}
 data("chnk_domain")
@@ -122,8 +122,7 @@ max_snap_dist = 1000
 # which of those sites are in Chinook domain?
 chnk_sites = chnk_samps %>%
   as_Spatial() %>%
-  snapPointsToLines_v2(points = .,
-  # maptools::snapPointsToLines(points = .,
+  maptools::snapPointsToLines(points = .,
                               lines = chnk_domain %>%
                                 mutate(id = 1:n()) %>%
                                 select(id, MPG) %>%
@@ -132,18 +131,11 @@ chnk_sites = chnk_samps %>%
                               withAttrs = TRUE,
                               idField = 'id') %>%
   as('sf') %>%
-  select(-nearest_line_id, -snap_dist) %>%
-  # include some sites in the John Day where Chinook were found (or seemed to be close to sites where Chinook were found)
-  rbind(st_read('../data/derived_data/Chnk_JohnDay_TrueObs.shp',
-                quiet = T) %>%
-          st_transform(st_crs(chnk_domain)) %>%
-          select(-in_range))
+  select(-nearest_line_id, -snap_dist)
 
 fish_hab %<>%
   filter(Site %in% chnk_sites$Site)
-  # filter(Species == 'Steelhead' |
-  #          (Species == 'Chinook' & Site %in% chnk_sites$Site))
-  
+
 ```
 
 Next we generated MINE stats for all possible habitat metrics, matching them up against the log of fish densities (plus a small value to deal with 0s).
@@ -327,25 +319,38 @@ Based on the MIC results, and trying to stay away from pairs of metrics that wer
 
 ```{r habitat-covariates}
 sel_hab_mets = tibble(Species = c('Chinook'),
-                      Metric = c('UcutArea_Pct',
-                                 'FishCovNone',
-                                 'SubEstGrvl',
-                                 'FstTurb_Freq',
-                                 'FstNT_Freq',
-                                 'CU_Freq',
-                                 'SlowWater_Pct',
-                                 'NatPrin1',
-                                 'DistPrin1',
-                                 'avg_aug_temp',
-                                 # 'Sin_CL',
-                                 'Sin',
-                                 'WetWdth_CV',
-                                 'WetBraid',
-                                 'WetSC_Pct',
-                                 'Q',
+                      Metric = c("WetWDRat_Avg",
+                                 "CU_Freq",
+                                 "DpthWet_SD",
+                                 "WetBraid",
+                                 "FishCovTotal",
+                                 "RipCovUstory",
                                  'WetWdth_Int',
-                                 'LWFreq_Wet',
-                                 'LWVol_WetFstTurb'))
+                                 'Q',
+                                 "SubLT6",
+                                 "SubD16",
+                                 "avg_aug_temp",
+                                 "LWFreq_Wet"))
+                      # 
+                      # Metric = c('UcutArea_Pct',
+                      #            'FishCovNone',
+                      #            'SubEstGrvl',
+                      #            'FstTurb_Freq',
+                      #            'FstNT_Freq',
+                      #            'CU_Freq',
+                      #            'SlowWater_Pct',
+                      #            'NatPrin1',
+                      #            'DistPrin1',
+                      #            'avg_aug_temp',
+                      #            # 'Sin_CL',
+                      #            'Sin',
+                      #            'WetWdth_CV',
+                      #            'WetBraid',
+                      #            'WetSC_Pct',
+                      #            'Q',
+                      #            'WetWdth_Int',
+                      #            'LWFreq_Wet',
+                      #            'LWVol_WetFstTurb'))
 
 # sum(!sel_hab_mets$Metric %in% names(fish_hab))
 ```
@@ -461,8 +466,7 @@ pred_hab_sites_chnk = pred_hab_sites %>%
            crs = 4326) %>%
   st_transform(crs = st_crs(chnk_domain)) %>%
   as_Spatial() %>%
-  snapPointsToLines_v2(chnk_domain %>%
-  # maptools::snapPointsToLines(chnk_domain %>%
+  maptools::snapPointsToLines(chnk_domain %>%
                                 mutate(id = 1:n()) %>%
                                 select(id, MPG) %>%
                                 as_Spatial(),
@@ -471,13 +475,7 @@ pred_hab_sites_chnk = pred_hab_sites %>%
                               idField = 'id') %>%
   as('sf') %>%
   as_tibble() %>%
-  select(-nearest_line_id, -snap_dist, -geometry) %>%
-  # add sites in the John Day
-  bind_rows(st_read('../data/derived_data/Chnk_JohnDay_TrueObs.shp',
-                    quiet = T) %>%
-              as_tibble() %>%
-              select(Site) %>%
-              inner_join(pred_hab_sites))
+  select(-nearest_line_id, -snap_dist, -geometry)
 
 ```
 
@@ -625,8 +623,6 @@ strata_test %>%
   arrange(desc(perc_missing)) %>%
   pander()
 
-
-
 ```
 
 We then selected a subset of the globally available attributes (GAAs) to use as extrapolation covariates. This was based on minimizing the correlations between the covariates. We also acknowlegdged which prediction sites had GAAs outside the range of values for the CHaMP sites.
@@ -659,14 +655,14 @@ range_comp = bind_rows(gaa_all %>%
                          select(Site,
                                 one_of(gaa_num)) %>%
                          gather(Metric, value, -Site) %>%
-                         mutate(Source = 'non-DASH Sites'),
+                         mutate(Source = 'non-CHaMP Sites'),
                        gaa_all %>%
                          filter(Site %in% unique(pred_hab_sites$Site)) %>%
                          select(Site,
                                 one_of(gaa_num)) %>%
                          distinct() %>%
                          gather(Metric, value, -Site) %>%
-                         mutate(Source = 'DASH Sites')) %>%
+                         mutate(Source = 'CHaMP Sites')) %>%
   mutate_at(vars(Source, Metric),
             list(as.factor))
 
@@ -675,7 +671,7 @@ range_max = range_comp %>%
   summarise_at(vars(value),
                tibble::lst(min, max),
                na.rm = T) %>%
-  filter(Source == 'DASH Sites') %>%
+  filter(Source == 'CHaMP Sites') %>%
   ungroup() %>%
   gather(type, value, -Metric, -Source)
 
@@ -691,7 +687,7 @@ covar_range_p = range_comp %>%
                summarise_at(vars(value),
                             tibble::lst(min, max),
                             na.rm = T) %>%
-               filter(Source == 'DASH Sites') %>%
+               filter(Source == 'CHaMP Sites') %>%
                ungroup() %>%
                gather(type, value, min, max),
              aes(yintercept = value),
