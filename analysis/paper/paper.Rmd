@@ -13,8 +13,8 @@ author:
       email: Richie.Carmichael@biomark.com
       institute: [biomark]
       correspondence: false
-  - Sarah Hoffman:
-      email: Sarah.Hoffman@biomark.com
+  - Sarah L. Hoffmann:
+      email: Sarah.Hoffmann@biomark.com
       institute: [biomark]
       correspondence: false
   - Chris Beasley:
