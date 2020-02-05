@@ -435,25 +435,21 @@ qrf_mod$importance %>%
   
 ```
 
-<!-- Need to flesh out this table with better names, and add units as a column -->
-
 ```{r gaa-covars}
+gaa_meta = read_rds("../data/derived_data/gaa_metadata.rds")
+
 tibble(Covariate = gaa_covars) %>%
-  left_join(readxl::read_excel('../../../QRFcapacity/data/raw/master_sample_pts/GAA_Metadata_20150506.xlsx') %>%
-              mutate(FieldName = recode(FieldName,
-                                        'ChanlType' = 'Channel_Type')) %>%
+  left_join(gaa_meta %>%
               select(Covariate = FieldName,
-                     Name = DisplayName) %>%
-              bind_rows(tibble(Covariate = "S2_02_11",
-                               Name = "NorWeST Avg. Aug. Temp"))) %>%
-  mutate(Scale = if_else(Covariate %in% c('NatPrin1', 
-                                          'DistPrin1'),
-                         'Watershed (HUC12)',
-                         if_else(Covariate %in% c('WIDE_BF',
-                                                  'Channel_Type',
-                                                  'Elev_M'),
-                                 'Site (300 m)',
-                                 'Reach (2 km)'))) %>%
+                     Name = DisplayName,
+                     Units,
+                     SpatialScale)) %>%
+  mutate(Units = if_else(Units == "na",
+                         as.character(NA),
+                         Units),
+         Units = if_else(grepl('\\^2', Units),
+                         str_replace(Units, '\\^2', '$^2$'),
+                         Units)) %>%
   left_join(model_svy_df$mod_full[[1]] %>%
               summary() %>%
               coefficients() %>%
@@ -462,6 +458,7 @@ tibble(Covariate = gaa_covars) %>%
   # pander(caption = "(\\#tab:gaa-covars)Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.")
   kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.",
         booktabs = T, 
+        escape = F,
         digits = 3)
 
 ```
@@ -566,8 +563,6 @@ knitr::include_graphics('../figures/ChampWtds.svg')
 # for pdf
 # knitr::include_graphics('../figures/ChampWtds.png')
 ```
-
-
 
 ```{r rel-imp-figure, fig.cap = "Relative importance of each habitat covariate included in the quantile regression forest (QRF) model to predict habitat capacity, during summer months, for spring/summer Chinook salmon parr"}
 qrf_mod$importance %>%
