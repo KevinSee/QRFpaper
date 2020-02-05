@@ -1,5 +1,5 @@
 ---
-title: "Estimating Life-Stage Specific Habitat Capacity for Anadromous Salmonids using Quantile Random Forest Models"
+title: "Estimating Carrying Capacity for Chinook Parr using Quantile Random Forest Models"
 author:
   - Kevin E. See:
       email: Kevin.See@biomark.com
@@ -256,7 +256,7 @@ Pacific salmon (*Oncorhynchus spp.*) species have experienced large declines in 
 
 @Fausch1988 conducted a thorough review of attempts to predict the standing crop of fish from measurable habitat covariates from 1950 to 1985, and found that the vast majority of multiple linear regression models failed to detect a significant fish-habitat signal. Since that review, there has been progress in identifying some fish-habitat relationships for some salmonid species. @Nickelson1992 found that juvenile coho were found in higher densities within pool habitat on the Oregon coast. Similarly, pool and pond densities were good predictors of coho smolt densities in western Washington [@Sharma2001]. @Bryant2009 found that juvenile coho abundance was positively related to large wood at the reach scale, however their results demonstrated a negative relationship between abundance and the number of pools. @Braun2011 similarly found positive associations between spawner densities of sockeye in the Fraser River and large wood, in addition to positive relationships to percent undercuts and percent pools. Densities of adult spawning coho were also higher in forested areas compared to urban or agricultural areas in the Snohomish River watershed [@Pess2002]. @Mossop2006 examined juvenile Chinook in the Yukon river and found positive correlations between the log of fish density and several metrics related to residual pool dimensions and large woody debris abundance as well as a negative correlation between fish density and gradient. These studies were focused on predicting observed fish densities, not necessarily capacity, and for most of them the predictive extent is limited to a particular watershed. In addition, they all assumed some form of linear fish-habitat relationship, which often results in weak predictive power. 
 
-A number of studies have utilized other modeling approaches to elicit non-salmonid fish habitat relationships. @Dunham2002 used a quantile regression approach to show a negative relationship between cutthroat trout densities and the width:depth ratio of a stream for the upper quantiles of trout density. The same approach was also used to map the potential extent of sole in the English Channel and southern North Sea [@Eastwood2003]. Machine learning models such as boosted regression trees and random forests have been used to examine species biomass, diversity and distribution for a number of different species [@Pittman2009; @Knudby2010; and @Compton2012]. The results from these studies highlight the importance and effectiveness of using techniques that can accommodate non-linear fish habitat relationships. 
+A number of studies have utilized other modeling approaches to elicit non-salmonid fish habitat relationships. @Dunham2002 used a quantile regression approach to show a negative relationship between cutthroat trout densities and the width:depth ratio of a stream for the upper quantiles of trout density. The same approach was also used to map the potential extent of sole in the English Channel and southern North Sea [@Eastwood2003]. Machine learning models such as boosted regression trees and random forests have been used to examine species biomass, diversity and distribution for a number of different species [@Pittman2009; @Knudby2010; and @Compton2012]. @Wall2016 took a bioenergic approach to predict the capacity of a reach to support juvenile steelhead. The results from these studies highlight the importance and effectiveness of using techniques that can accommodate non-linear fish habitat relationships. 
 
 Most studies that have investigated fish habitat relationships focus on predicting a species’ distribution (presence / absence) or the average abundance or density, neither of which can be easily manipulated to predict carrying capacity. Further, many of these studies focus on only one or two measures of habitat. @Sweka2010 estimated carrying capacity of Atlantic salmon parr using a quantile regression approach, but the only habitat covariate they included was cumulative drainage area. Traditionally, carrying capacity for salmonids has been estimated through stock-recruitment curves. However, this requires a long time-series of data with variety in the number of spawners which is not usually available [@Cramer2009].
 
@@ -318,13 +318,17 @@ Spawner-recruit data from several watersheds within the interior CRB were compil
 
 ## Habitat Covariate Selection
 
-We categorized `r filter(hab_dict, MetricGroupName == "Visit Metric") %>% nrow()` habitat measurements collected using the CHaMP habitat protocol [@CHaMP2016] into `r n_distinct(hab_dict$MetricCategory[!is.na(hab_dict$MetricCategory)]) %>% english %>% as.character` habitat categories, and for each habitat covariate an MIC value was calculated based on the strength of association between the habitat covariate and the response variable, parr density (fish/m). We chose the following `r nrow(sel_hab_mets)` CHaMP habitat covariates to fit the QRF model: wetted width:depth ratio, channel unit frequency, standard deviation of the wetted depth, braidedness, total fish cover, percent riparian understory, wetted width, observed discharge, percent fines less than 6mm, lower quantile of substrate size (D16), average august temperature and the frequency of large wood in the wetted channel (Table \@ref(tab:select-mets-table)). 
+We categorized `r filter(hab_dict, MetricGroupName == "Visit Metric") %>% nrow()` habitat measurements collected using the CHaMP habitat protocol [@CHaMP2016] into `r n_distinct(hab_dict$MetricCategory[!is.na(hab_dict$MetricCategory)]) %>% english %>% as.character` habitat categories, and for each habitat covariate an MIC value was calculated based on the strength of association between the habitat covariate and the response variable, parr density (fish/m). We chose the following `r as.character(english(nrow(sel_hab_mets)))` CHaMP habitat covariates to fit the QRF model: wetted width:depth ratio, channel unit frequency, standard deviation of the wetted depth, braidedness, total fish cover, percent riparian canopy that was big trees, wetted width, observed discharge, percent fines less than 6mm, lower quantile of substrate size (D16), average august temperature and the frequency of large wood in the wetted channel (Table \@ref(tab:select-mets-table)). 
 
 ## QRF Model
 
-A QRF model was fit using those metrics and the *quantregForest* package [@Meinshausen2006] in R [@Rsoftware2019] and the 90th quantile of the predicted distribution was used as a proxy for carrying capacity. After model fit, we examined the relative importance of each habitat covariate included in the model (Figure \@ref(fig:rel-imp-figure)). Moreover, QRF models allow one to visually examine the marginal effect of each habitat covariate on the quantile of interest using partial dependence plots (PDP). These plots show the marginal effect of changing a single habitat covariate while maintaining all other covariates at their mean values (Figure \@ref(fig:pdp-figure)). However, given that many habitat metrics are somewhat correlated, these marginal effects are not independent of one another making the interpretation of partial dependence plots less straightforward. After model fitting, the QRF model was used to predict habitat capacity at all CHaMP sites within the interior Columbia River basin. 
+A QRF model was fit using those metrics and the *quantregForest* package [@Meinshausen2006] in R [@Rsoftware2019] and the 90th quantile of the predicted distribution was used as a proxy for carrying capacity. After model fit, we examined the relative importance of each habitat covariate included in the model (Figure \@ref(fig:rel-imp-figure)). Moreover, QRF models allow one to visually examine the marginal effect of each habitat covariate on the quantile of interest using partial dependence plots (PDP). These plots show the marginal effect of changing a single habitat covariate while maintaining all other covariates at their mean values (Figure \@ref(fig:pdp-figure)). However, given that many habitat metrics are somewhat correlated, these marginal effects are often not independent of one another, so care should be taken when interpretting them. After model fitting, the QRF model was used to predict habitat capacity at all CHaMP sites within the interior Columbia River basin. 
 
 ## Extrapolating to Other Sites
+
+The coefficients for the extrapolation model can be found in Table \@ref(tab:gaa-covars).
+
+<!-- Probably need something more here -->
 
 ## Model Validation
 
@@ -332,46 +336,42 @@ Estimates of Chinook salmon parr capacity from the QRF and extrapolation models 
 
 # Discussion
 
-<!-- A test commit and push from Sarah's machine -->
-<!-- need to do one more test -->
-
 ## A Tool To Estimate Habitat Capacity
 
 In this study, we developed a novel approach to estimate the capacity of habitat to support Chinook salmon parr during summer months in wadeable streams. Our model can be used to quantify juvenile rearing capacity in Chinook salmon watersheds or populations and, in turn, quantify the magnitude of tributary habitat rehabilitation necessary to support Endangered Species Act (ESA) delisting. The QRF and extrapolation models presented here provide useful tools towards the prioritization, implementation, and evaluation of habitat restoration actions to recover depleted salmon populations. Moreover, the models presented here can be applied to multiple stages within the life cycle (e.g., parr, smolt, adult). Estimates of habitat carrying capacity for multiple life stages will allow biologists and managers to identify what life stage specific habitat is limiting. For example, QRF models and associated extrapolation models may demonstrate that habitat for a given population is sufficient to support adult spawning required for ESA delisting, but that juvenile capacity may not be sufficient to support those levels of adult spawning. In such a case, habitat restoration actions may be most cost-effectively and sustainably directed towards juvenile rearing habitat. Models to estimate habitat carrying capacity for multiple life stages will help to better direct habitat restoration actions.
 
-## What Watershed-scale Capacity Models Are Currently Available?
+## What Carrying Capacity Models Are Currently Available?
 
-Historically, fish-habitat relationship models have focused on species distribution or average abundance/density rather than directly addressing carrying capacity. The QRF approach employed here allows for the analysis of multiple correlated habitat metrics, often with non-linear relationships to fish density, in order to assess fish habitat relationships for higher quantiles that are assumed to represent carrying capacity. 
+When it comes to estimating carrying capacity, spawner-recruit models are the gold standard (**citation?**). However, such models require a long time-series of accurate estimates of adults and juveniles, with variation in the number of adults. Such datasets are not available everywhere, nor do they necessarily allow one to link capacity to habitat characteristics, except perhaps at the watershed scale. QRF models require a large number of paired fish-habitat sites, but if done across a wide variety of habitat types this data could theoretically be collected in a single season. Or the dataset could be built over time, sampling different locations in different years. If the latter approach is taken, some thought must be given to possible year effects and how to best deal with them. 
 
-<!-- Talk about how the gold standard of carrying capacity estimates are spawner-recruit curves, and our validation exercise shows that QRF is getting similar answers. Then we can contrast the data needs for both approaches, and how spawner-recruit analyses don't tell you how capacity is related to habitat. -->
+The favorable comparison between QRF estimates of watershed capacity and the spawner-recruit estimates in selected watersheds goes a long way to justifying this approach. Although built from completely different data, when these mulitple lines of evidence converge it lends credence to the QRF results. 
 
-<!-- Somewhere in here, mention how data can be collected over a short time span, if enough spatial variation is captured. Or dataset can be built over time, sampling different locations (but be vary of possible year effects, maybe). -->
+Bioenergics approaches, such as the net rate of energy intake (NREI) have been applied to salmonids to estimate capacity on the same reach scale that our QRF model operates on [@Wall2016]. However, there are some potential issues with how the food supply (i.e. invertebrate drift) is measured with these methods that could lead to biases in capacity estimates [@Dodrill2016]. 
 
+<!-- Historically, fish-habitat relationship models have focused on species distribution or average abundance/density rather than directly addressing carrying capacity. The QRF approach employed here allows for the analysis of multiple correlated habitat metrics, often with non-linear relationships to fish density, in order to assess fish habitat relationships for higher quantiles that are assumed to represent carrying capacity.  -->
 
 ## Biological Expectations from QRF Model
 
-The results of the QRF parr capacity model for spring/summer Chinook salmon meet many biological expectations.
+The results of the QRF parr capacity model for spring/summer Chinook salmon meet many biological expectations. Focusing on the partial dependence plots (Figure \@ref(fig:pdp-figure)), the QRF model predicts capacity to increase when the wetted width, discharge and the width-to-depth ratio grow, when temperatures are cooler, when there is more fish cover, when channel unit frequency increases and when the standard deviation of the wetted depth (a proxy for complexity) increases. These are all patterns that emerged from the fish-habitat data, and those fish-habitat relationships match what has been found qualitatively in many other studies (**need citations?**). 
 
-<!-- Discussion of biological expectations and PDP plots… -->
+The biggest driver of capacity is stream size, whether measured by wetted width or discharge, which should be unsurprising since we are using fish per meter as our response. In many ways, these metrics define habitat quantity. However, other metrics help define habitat quality, such as cooler temperatures in August, less pool-tail fine sendiment, and higher channel unit frequencies (another way of saying more pool-riffle interfaces). 
 
 <!-- Try to include images of high capacity / low capacity sites  -->
 
 ## Extrapolation Model
 
+Fish are mobile creatures, and determining the appropriate spatial scale to estimate how their capacity may be determined by habitat characteristics is important. In the summer, for Chinook parr, there is clearly movement between multiple channel units (e.g. pool, riffle, run), suggesting that fish are utilizing habitat at a larger scale than the channel unit. However, it is unlikely that they are moving up and down the entire watershed. Therefore, we believe the 200 - 500 m reaches used in this study are an appropriate scale to capture the fish-habitat relationships that define carrying capacity. At the same time, we acknowledge that managers, life-cycle modelers and others are often interested in capacity estimates at larger spatial scales. While our QRF model can provide site-specific estimates of carrying capacity derived from paired fish-habitat data, our extrapolation model allows for estimates at larger spatial extents, such as watershed and population level scales. This is an efficient technique to leverage existing relationships for meaningful management decisions.
+
+
 <!-- Start with benefits of extrapolation model. For example, allows us to make estimates at larger scales. However, transition to negatives of extrapolation model. -->
 
 <!-- Then open it up to next steps of extrapolation model. i.e., ideally one should collect spatially continuous habitat data. If done, we could eliminate the extrapolation model altogether. Transition to improving habitat data. -->
 
-In addition to site-specific estimates of carrying capacity derived from paired fish-habitat data, our extrapolation model allows for analyses at larger extents, such as watershed and population level scales. This is an efficient technique to leverage existing relationships for meaningful management decisions.
+
 
 While the Columbia River Basin is an excellent candidate for this type of extrapolation given the wealth of CHaMP data, application of this technique to areas with limited habitat data may be considerably more challenging. On-the-ground habitat data collection is costly, time-consuming, and often not reproducible; thereby limiting the effectiveness of this type of extrapolation.  Additionally, the extrapolation model relies on Global Available Attribute (GAA) data which …. 
 
 <!-- Add here why GAA are messy. And then anything else which may be a consideration for using the extrapolation model moving forward.  -->
-
-<!-- The following sentence doesn't make sense -->
-
-Despite these considerations, we were able to leverage extensive datasets to produce carrying capacity estimates throughout the CRB that significantly increase or habitat restoration prioritization in a cost-effective manner.
-
 
 ## The Future: Improving Habitat Data
 
@@ -412,9 +412,9 @@ qrf_data %>%
   adorn_pct_formatting() %>%
   rename(`n Sites` = n,
          Percent = percent) %>%
-  pander(caption = "(\\#tab:fh-samp-table)The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model.")
-  # kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model',
-  #       booktabs = T)
+  # pander(caption = "(\\#tab:fh-samp-table)The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model.")
+  kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer Chinook salmon parr capacity QRF model',
+        booktabs = T)
   
 ```
 
@@ -431,10 +431,10 @@ qrf_mod$importance %>%
          Metric = Name,
          `Metric Category` = MetricCategory,
          Description = DescriptiveText) %>%
-  pander(caption = "(\\#tab:select-mets-table) Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.")
-  # kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.",
-  #       booktabs = T,
-  #       format.args = list(width = c(2, 10, 10, 50)))
+  # pander(caption = "(\\#tab:select-mets-table) Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.")
+  kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.",
+        booktabs = T,
+        format.args = list(width = c(2, 10, 10, 50)))
   
 ```
 
@@ -442,6 +442,13 @@ qrf_mod$importance %>%
 
 ```{r gaa-covars}
 tibble(Covariate = gaa_covars) %>%
+  left_join(readxl::read_excel('../../../QRFcapacity/data/raw/master_sample_pts/GAA_Metadata_20150506.xlsx') %>%
+              mutate(FieldName = recode(FieldName,
+                                        'ChanlType' = 'Channel_Type')) %>%
+              select(Covariate = FieldName,
+                     Name = DisplayName) %>%
+              bind_rows(tibble(Covariate = "S2_02_11",
+                               Name = "NorWeST Avg. Aug. Temp"))) %>%
   mutate(Scale = if_else(Covariate %in% c('NatPrin1', 
                                           'DistPrin1'),
                          'Watershed (HUC12)',
@@ -450,9 +457,16 @@ tibble(Covariate = gaa_covars) %>%
                                                   'Elev_M'),
                                  'Site (300 m)',
                                  'Reach (2 km)'))) %>%
-  pander(caption = "(\\#tab:gaa-covars)Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).")
-  # kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population).",
-  #       booktabs = T)
+  left_join(model_svy_df$mod_full[[1]] %>%
+              summary() %>%
+              coefficients() %>%
+              as_tibble(rownames = "Covariate") %>%
+              select(1:3)) %>%
+  # pander(caption = "(\\#tab:gaa-covars)Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.")
+  kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile regression forest (QRF) model predictions of spring/summer Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.",
+        booktabs = T, 
+        digits = 3)
+
 ```
 
 ```{r extrap-r2-table}
@@ -500,11 +514,11 @@ model_svy_df %>%
          Response = response,
          `$r^2$` = R2, 
          `Adjusted $r^2$` = `Adjusted R2`) %>%
-  pander(caption = "(\\#tab:extrap-r2-table)Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.")
-  # kable(caption = "Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.",
-  #       escape = F,
-  #       booktabs = T,
-  #       digits = c(NA, NA, 3, 3))
+  # pander(caption = "(\\#tab:extrap-r2-table)Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.")
+  kable(caption = "Summary of extrapolation model fits, split by each of the responses and whether the extrapolation model used CHaMP watershed as a covariate or not.",
+        escape = F,
+        booktabs = T,
+        digits = 3)
   
 ```
 
@@ -537,8 +551,9 @@ spawn_rec_params %>%
                                               'QRF'))) %>%
               spread(form, prnt_val)) %>%
   filter(Population %in% keep_wtsds) %>%
-  pander(caption = "(\\#tab:sr-table)Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
-  # kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
+  # pander(caption = "(\\#tab:sr-table)Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.")
+  kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.",
+        booktabs = T)
 
 ```
 
@@ -549,36 +564,10 @@ spawn_rec_params %>%
 <div id="figures"></div>
 
 ```{r wtsd-map, fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
-river_lines = QRFcapacity::get_flowlines(stream_order = 6,
-                                         champ_wtsds %>%
-                                           st_union() %>%
-                                           st_make_grid(n = 1)) %>%
-            filter(!grepl('^1701', reachcode),
-                   !grepl('^171', reachcode))
+knitr::include_graphics('../figures/ChampWtds.svg')
 
-# river_lines %>%
-#   filter(!gnis_name %in% c('Deschutes River',
-#                            'Crooked River',
-#                            'Payette River',
-#                            'North Fork Payette River')) %>%
-#   ggplot() +
-#   geom_sf(aes(color = gnis_name))
-
-ggplot(data = champ_wtsds) +
-  geom_sf(data = river_lines %>%
-            filter(!gnis_name %in% c('Deschutes River',
-                                     'Crooked River',
-                                     'Payette River',
-                                     'North Fork Payette River')),
-          color = 'darkblue') +
-  geom_sf() +
-  geom_sf(data = champ_wtsds %>%
-            filter(fish_data),
-          fill = 'black') +
-  geom_sf_label(aes(label = id),
-                position = position_dodge(width = 200)) +
-  theme(axis.title = element_blank())
-
+# for pdf
+# knitr::include_graphics('../figures/ChampWtds.png')
 ```
 
 
@@ -613,12 +602,14 @@ plot_partial_dependence(rf_mod = qrf_mod,
                         scales = 'free') +
   labs(y = 'Capacity Prediction (per m)') +
   scale_color_grey(start = 0.5, end = 0.5) +
-  theme(legend.position = 'none')
+  theme(legend.position = 'none',
+        strip.text = element_text(size = 6))
 ```
 
 ```{r sr-figure, fig.cap = "Spawner-recruit data from seven watersheds. Solid lines are the spawner-recruit curve, dashed lines are the estimated capacity, and shaded polygons depict the 95% confidence intervals of capacity. Blue corresponds to Beverton-Holt models, green to Ricker models, yellow to hockey stick models, and red to QRF estimates. The QRF solid curve is a Beverton-Holt model with the capacity parameter fixed to the QRF estimate of capacity."}
 
-spawn_rec_comp_p
+spawn_rec_comp_p +
+  theme(strip.text = element_text(size = 7))
 ```
 
 
