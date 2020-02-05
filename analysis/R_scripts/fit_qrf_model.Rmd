@@ -666,6 +666,16 @@ data(gaa)
 gaa_all = gaa %>%
   rename(Channel_Type = ChanlType)
 
+# get some meta data for GAAs
+gaa_meta = readxl::read_excel('../../../QRFcapacity/data/raw/master_sample_pts/GAA_Metadata_20150506.xlsx') %>%
+              mutate(FieldName = recode(FieldName,
+                                        'ChanlType' = 'Channel_Type')) %>%
+              bind_rows(tibble(Covariate = "S2_02_11",
+                               Name = "NorWeST Avg. Aug. Temp",
+                               Units = "C",
+                               SpatialScale = "Site-300m"))
+
+
 # possible covariates from among the GAAs
 gaa_covars = c('TRange', 'GDD', 'Precip', 'Elev_M', 'CHaMPsheds', 'NatPrin1', 'NatPrin2', 'DistPrin1', 'BFW_M', 'SrtCumDrn', 'StrmPwr', 'Slp_NHD_v1', 'Channel_Type', 'MAVELV', 'WIDE_BF', 'S2_02_11')
 
@@ -1044,6 +1054,8 @@ all_preds %<>%
 
 write_rds(gaa_covars,
           "../data/derived_data/gaa_covars.rds")
+write_rds(gaa_meta,
+          "../data/derived_data/gaa_metadata.rds")
 write_rds(mod_data_weights,
           "../data/derived_data/mod_data_weights.rds")
 write_rds(model_svy_df,
