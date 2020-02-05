@@ -33,7 +33,7 @@ theme_set(theme_bw())
 # setwd('analysis/R_scripts')
 ```
 
-# Select QRF Habitat Covariates
+# Load Data
 
 We loaded the data that had been prepped and saved as part of the `QRFcapacity` package. We used the data from all CHaMP sites, 2011-2017.
 
@@ -43,12 +43,36 @@ data("fh_sum_champ_2017")
 fish_hab = fh_sum_champ_2017 %>%
   filter(Species == 'Chinook') %>%
   mutate_at(vars(Watershed, Year),
-            list(as.factor))
+            list(as.factor)) %>%
+  # scale some metrics by site length
+  mutate_at(vars(starts_with('LWVol')),
+            list(~ . / Lgth_Wet * 100)) %>%
+  mutate(RipCovCanSome = 100 - RipCovCanNone)
   
 
 # and the appropriate habitat dictionrary to go with it
 data("hab_dict_2017")
 hab_dict = hab_dict_2017
+
+# change some of the descriptions for large wood volume
+hab_dict %<>%
+  mutate(DescriptiveText = if_else(grepl("^LWVol", ShortName),
+                                   paste0(str_remove(DescriptiveText, ".$"),
+                                         ", scaled by site length."),
+                                   DescriptiveText),
+         UnitOfMeasure = if_else(grepl("^LWVol", ShortName),
+                                   paste0(UnitOfMeasure,
+                                         " per 100 meters"),
+                                   UnitOfMeasure),
+         UnitOfMeasureAbbrv = if_else(grepl("^LWVol", ShortName),
+                                   paste0(UnitOfMeasureAbbrv,
+                                         "/100m"),
+                                   UnitOfMeasureAbbrv)) %>%
+  bind_rows(hab_dict_2017 %>%
+              filter(ShortName == "RipCovCanNone") %>%
+              mutate(ShortName = "RipCovCanSome",
+                     Name = "Riparian Cover: Some Canopy",
+                     DescriptiveText = "Percent of riparian canopy with some vegetation."))
 
 # all the related habitat data
 data("champ_site_2011_17")
@@ -57,7 +81,8 @@ hab_data = champ_site_2011_17 %>%
                            'CHaMP Training',
                            'Region 17',
                            'Walla Walla',
-                           'Umatilla'))
+                           'Umatilla')) %>%
+  mutate(RipCovCanSome = 100 - RipCovCanNone)
 
 data("champ_site_2011_17_avg")
 hab_avg = champ_site_2011_17_avg %>%
@@ -65,7 +90,8 @@ hab_avg = champ_site_2011_17_avg %>%
                            'CHaMP Training',
                            'Region 17',
                            'Walla Walla',
-                           'Umatilla'))
+                           'Umatilla')) %>%
+  mutate(RipCovCanSome = 100 - RipCovCanNone)
 
 # add temperature metrics
 data("champ_temps")
@@ -138,6 +164,10 @@ fish_hab %<>%
 
 ```
 
+# Select QRF Habitat Covariates
+
+## MINE Statistics
+
 Next we generated MINE stats for all possible habitat metrics, matching them up against the log of fish densities (plus a small value to deal with 0s).
 
 ```{r MINE_stats}
@@ -154,8 +184,6 @@ poss_hab_mets = hab_dict %>%
 
 
 mine_res = fish_hab %>%
-  mutate_at(vars(starts_with('LWVol')),
-            list(~ . / Lgth_Wet)) %>%
   mutate(fish_dens = log(fish_dens + 0.005)) %>%
   estimate_MIC(covars = poss_hab_mets,
                response = 'fish_dens') %>%
@@ -325,13 +353,15 @@ sel_hab_mets = tibble(Species = c('Chinook'),
                                  "WetBraid",
                                  "FishCovTotal",
                                  # "RipCovUstory",
-                                 "RipCovBigTree",
+                                 # "RipCovBigTree",
+                                 "RipCovCanSome",
                                  'WetWdth_Int',
                                  'Q',
                                  "SubLT6",
                                  "SubD16",
                                  "avg_aug_temp",
-                                 "LWFreq_Wet"))
+                                 "LWVol_WetSlow"))
+                                 # "LWFreq_Wet"))
                       # 
                       # Metric = c('UcutArea_Pct',
                       #            'FishCovNone',
