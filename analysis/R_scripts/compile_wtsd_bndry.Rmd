@@ -19,12 +19,12 @@ library(janitor)
 library(magrittr)
 library(sf)
 library(ggrepel)
+library(ggspatial)
 
 # set default theme for ggplot
 theme_set(theme_bw())
 # setwd('analysis/R_scripts')
 ```
-
 
 Start by looking at which watersheds we need polygon shapes for.
 
@@ -114,6 +114,9 @@ ggplot(data = champ_wtsds) +
                 position = position_dodge(width = 200)) +
                 # position = position_nudge(x = 5000,
                 #                           y = -5000)) +
+  annotation_north_arrow(location = 'tr',
+                         which_north = 'true',
+                         style = north_arrow_fancy_orienteering) +
   theme(axis.title = element_blank())
   
 ```
@@ -157,15 +160,30 @@ wtsd_map = ggplot(data = champ_wtsds) +
           fill = 'black') +
   geom_sf_label(aes(label = id),
                 position = position_dodge(width = 200)) +
+  annotation_north_arrow(location = 'tr',
+                         which_north = 'true',
+                         style = north_arrow_fancy_orienteering) +
   theme(axis.title = element_blank())
 
 # save a couple versions
 ggsave('../figures/ChampWtds.svg',
        wtsd_map,
+       dpi = 600,
        height = 6,
        width = 6)
 ggsave('../figures/ChampWtds.png',
        wtsd_map,
+       dpi = 600,
+       height = 6,
+       width = 6)
+ggsave('../figures/ChampWtds.tiff',
+       wtsd_map,
+       dpi = 600,
+       height = 6,
+       width = 6)
+ggsave('../figures/ChampWtds.jpeg',
+       wtsd_map,
+       dpi = 600,
        height = 6,
        width = 6)
 ```
