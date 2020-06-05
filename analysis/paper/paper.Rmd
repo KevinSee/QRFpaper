@@ -366,7 +366,7 @@ The results of the QRF parr capacity model for spring/summer Chinook salmon meet
 The biggest driver of capacity is stream size, whether measured by wetted width or discharge, which should be unsurprising since we are using fish per meter as our response. In many ways, these metrics define habitat quantity. However, other metrics help define habitat quality, such as cooler temperatures in August, less pool-tail fine sendiment, and higher channel unit frequencies (another way of saying more pool-riffle interfaces). 
 
 <!-- Try to include images of high capacity / low capacity sites  -->
-See Figures \@ref{fig:site-photo-high} and \@ref{fig:site-photo-low}.
+See Figures \@ref(fig:site-photo-high) and \@ref(fig:site-photo-low).
 
 ## Extrapolation Model
 
