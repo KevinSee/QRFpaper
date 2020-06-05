@@ -31,18 +31,18 @@ output:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::pdf_document2:
-      fig_caption: yes
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks2.lua
-      - --lua-filter=../templates/pagebreak.lua
     bookdown::word_document2:
       fig_caption: yes
       reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
+    bookdown::pdf_document2:
+      fig_caption: yes
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks2.lua
       - --lua-filter=../templates/pagebreak.lua
 bibliography:
 - references.bib
@@ -69,7 +69,7 @@ knitr::opts_chunk$set(
   echo = FALSE,
   comment = "#>",
   fig.path = "../figures/",
-  dpi = 300
+  dpi = 600
 )
 ```
 
@@ -361,7 +361,7 @@ Historically, fish-habitat relationship models have focused on species distribut
 
 ## Biological Expectations from QRF Model
 
-The results of the QRF parr capacity model for spring/summer Chinook salmon meet many biological expectations. Focusing on the partial dependence plots (Figure \@ref(fig:pdp-figure)), the QRF model predicts capacity to increase when the wetted width, discharge and the width-to-depth ratio grow, when temperatures are cooler, when there is less fine sediment, when there is more fish cover, when channel unit frequency increases and when the standard deviation of the wetted depth (a proxy for complexity) increases. These are all patterns that emerged from the fish-habitat data, and those fish-habitat relationships match what has been found qualitatively in many other studies (**need citations??**) [@Mossop2006]. 
+The results of the QRF parr capacity model for spring/summer Chinook salmon meet many biological expectations. Focusing on the partial dependence plots (Figure \@ref(fig:pdp-figure)), the QRF model predicts capacity to increase when the wetted width, discharge and the width-to-depth ratio grow, when temperatures are cooler, when there is less fine sediment, when there is more fish cover, when channel unit frequency increases and when the standard deviation of the wetted depth (a proxy for complexity) increases. These are all patterns that emerged from the fish-habitat data, and those fish-habitat relationships match what has been found qualitatively in many other studies (**need more citations??**) [@Mossop2006]. 
 
 The biggest driver of capacity is stream size, whether measured by wetted width or discharge, which should be unsurprising since we are using fish per meter as our response. In many ways, these metrics define habitat quantity. However, other metrics help define habitat quality, such as cooler temperatures in August, less pool-tail fine sendiment, and higher channel unit frequencies (another way of saying more pool-riffle interfaces). 
 
@@ -392,6 +392,8 @@ Development of a standardized protocol to incorporate remotely sensed data (LiDA
 
 
 ## Conclusions and Next Steps
+
+If a species' carrying capacity is defined or constrained, at least in part, by the habitat in which it lives, then illuminating statistically how such habitat impacts carrying capacity can lead to understanding how a species interacts with its environment. This understanding could be of crucial importance in the realm of conservation, when dealing with an endangered or threatened species, but species/habitat interactions are a core element of ecological studies more generally. We have demonstrated how a quantile regression approach, coupled with a random forest framework, can be used to estimate these relationships, and predict an habitat's capacity. As large ecological datasets become more accessible, and the ability to measure large swaths of habitat more feasible, we believe this approach has many potential applications, from the North American breeding bird survey to groundfish trawl surveys. ***other potential examples (coral reefs? turtles?)***
 
 <!-- Consider pulling back and thinking about whether these kinds of techniques could be applied to other systems (terrestial, ocean, etc.). One example might the breeding bird survey, if someone could gather some habitat metrics at all the various sampling routes (big GIS exercise). If not, we may want to target a more fisheries-centric journal -->
 
@@ -581,11 +583,12 @@ qrf_mod$importance %>%
   arrange(desc(imp)) %>%
   left_join(hab_dict %>%
               filter(is.na(MetricGroupName) | MetricGroupName != 'Tier 1 Summary')) %>%
-  mutate_at(vars(ShortName, Name),
+  mutate_at(vars(ShortName, Name, MetricCategory),
             list(~ fct_reorder(., .x = imp))) %>%
   ggplot(aes(x = Name,
              y = imp)) +
-  # geom_col(aes(fill = MetricCategory)) %>%
+  # geom_col(aes(fill = MetricCategory)) +
+  # scale_fill_brewer(palette = 'Set2') +
   geom_col(fill = 'gray40') +
   coord_flip() +
   labs(x = 'Metric',
@@ -614,11 +617,11 @@ spawn_rec_comp_p +
   theme(strip.text = element_text(size = 7))
 ```
 
-```{r site-photo-high, fig.cap = 'Photo of CHaMP site, CBW05583-415923, with predicted high capacity.'}
+```{r site-photo-high, dpi = 300, fig.cap = 'Photo of CHaMP site, CBW05583-415923, with predicted high capacity.'}
 knitr::include_graphics('../figures/SitePhoto_CBW05583-415923.jpg')
 ```
 
-```{r site-photo-low, fig.cap = 'Photo of CHaMP site, CBW05583-109994, with predicted low capacity.'}
+```{r site-photo-low, dpi = 300, fig.cap = 'Photo of CHaMP site, CBW05583-109994, with predicted low capacity.'}
 knitr::include_graphics('../figures/SitePhoto_CBW05583-109994.jpg')
 ```
 
