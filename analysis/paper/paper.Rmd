@@ -27,6 +27,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
     bookdown::html_document2:
       fig_caption: yes
+      number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
@@ -34,12 +35,14 @@ output:
     bookdown::word_document2:
       fig_caption: yes
       reference_docx: "../templates/template.docx" # Insert path for the DOCX file
+      number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
+      number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks2.lua
