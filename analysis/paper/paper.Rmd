@@ -122,6 +122,24 @@ all_preds = read_rds("../data/derived_data/all_preds.rds")
 spawn_rec_params = read_rds("../data/derived_data/spawn_rec_params.rds")
 model_svy_df = read_rds("../data/derived_data/model_svy_df.rds")
 champ_wtsds = read_rds("../data/derived_data/champ_wtds.rds")
+
+sel_hab_mets %<>%
+  left_join(hab_dict %>%
+              select(Metric = ShortName,
+                     Name) %>%
+              distinct()) %>%
+  mutate(Name = recode(Name,
+                       'Wetted Width To Depth Ratio Avg' = 'Width:Depth Ratio',
+                       'Wetted Depth SD' = 'Depth Complexity',
+                       'Wetted Channel Braidedness' = 'Braidedness',
+                       'Fish Cover: Total' = 'Fish Cover',
+                       'Riparian Cover: Some Canopy' = 'Riparian Canopy',
+                       'Wetted Width Integrated' = 'Wetted Width',
+                       'Substrate < 6mm' = 'Fines',
+                       # 'Substrate: D16',
+                       'Avg. August Temperature' = 'Avg. August Temp.',
+                       'Large Wood Volume: Wetted Slow Water' = 'Large Wood Freq. in Pools'))
+                       
 ```
 
 ```{r sp-rec-comp}
@@ -316,7 +334,7 @@ After model fitting, the QRF model was then be used to predict capacity using me
 
 <!-- Using the QRF model, we predicted habitat capacity for juvenile rearing at all CHaMP sites within the interior Columbia River basin.  -->
 
-To predict capacity at larger spatial scales, such as the watershed or population, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) which were available for the entirety of tributary habitat utilized by a given population. The GAA data used here was taken from the list of GRTS master sample sites that the CHaMP sites were originally selected from [@Larsen2016]. Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed (Table \@ref(tab:gaa-covars)). The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the *svyglm* function from the *survey* package [@R-survey] in R software [@Rsoftware2019]. We fit two extrapolation models to each type of fish density, one that included watershed as covariate, for use in predicting capacity within CHaMP watersheds, and one that did not, for predicting everywhere else. We then made predictions of linear and areal capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. Summaries of extrapolation model fit are shown in Table \@ref(tab:extrap-r2-table).
+To predict capacity at larger spatial scales, such as the watershed or population, we developed two extrapolation models (linear and areal capacity) based on globally available attributes (GAA) which were available for the entirety of tributary habitat utilized by a given population. The GAA data used here was taken from the list of GRTS master sample sites that the CHaMP sites were originally selected from [@Larsen2008; @Larsen2016]. Possible covariates included temperature range, growing degree days, an index of disturbance, the square root of cumulative drainage area, stream power, slope, channel type and watershed (Table \@ref(tab:gaa-covars)). The natural log of the CHaMP site capacity predictions was used as the response variable in a multiple linear regression model that incorporated the design weights of the CHaMP sites using the *svyglm* function from the *survey* package [@R-survey] in R software [@Rsoftware2019]. We fit two extrapolation models to each type of fish density, one that included watershed as covariate, for use in predicting capacity within CHaMP watersheds, and one that did not, for predicting everywhere else. We then made predictions of linear and areal capacity at all master sample sites throughout the interior CRB, generally spaced about one kilometer apart. Summaries of extrapolation model fit are shown in Table \@ref(tab:extrap-r2-table).
 
 To summarize capacity at larger scales, the mean linear capacity (e.g., fish/m) of the master sample points along a particular tributary is multiplied by the length of that tributary. We first restricted the master sample points and lengths of streams to those with the domain of spring/summer Chinook, as defined by StreamNet ([http://www.streamnet.org](http://www.streamnet.org) ) or using expert opinion from local biologists. The capacities of various tributaries could then be summed to estimate capacity at almost any spatial scale. 
 
@@ -393,6 +411,8 @@ Development of a standardized protocol to incorporate remotely sensed data (LiDA
 
 ## Conclusions and Next Steps
 
+<!-- The beginning of the following paragraph may need some word-smithing -->
+
 If a species' carrying capacity is defined or constrained, at least in part, by the habitat in which it lives, then illuminating statistically how such habitat impacts carrying capacity can lead to understanding how a species interacts with its environment. This understanding could be of crucial importance in the realm of conservation, when dealing with an endangered or threatened species, but species/habitat interactions are a core element of ecological studies more generally. We have demonstrated how a quantile regression approach, coupled with a random forest framework, can be used to estimate these relationships, and predict an habitat's capacity. As large ecological datasets become more accessible, and the ability to measure large swaths of habitat more feasible, we believe this approach has many potential applications, from the North American breeding bird survey to groundfish trawl surveys. ***other potential examples (coral reefs? turtles?)***
 
 <!-- Consider pulling back and thinking about whether these kinds of techniques could be applied to other systems (terrestial, ocean, etc.). One example might the breeding bird survey, if someone could gather some habitat metrics at all the various sampling routes (big GIS exercise). If not, we may want to target a more fisheries-centric journal -->
@@ -434,7 +454,10 @@ qrf_mod$importance %>%
   arrange(desc(imp)) %>%
   mutate(Rank = 1:n()) %>%
   select(-imp) %>%
-  left_join(hab_dict) %>%
+  left_join(hab_dict %>%
+              select(-Name) %>%
+              inner_join(sel_hab_mets %>%
+                           rename(ShortName = Metric))) %>%
   filter(MetricGroupName != 'Tier 1 Summary') %>%
   select(Rank,
          Metric = Name,
@@ -580,9 +603,14 @@ knitr::include_graphics('../figures/ChampWtds.jpeg')
 qrf_mod$importance %>%
   as_tibble(rownames = 'ShortName') %>%
   rename(imp = IncNodePurity) %>%
+  mutate(imp = (imp / max(imp)) * 100) %>%
   arrange(desc(imp)) %>%
   left_join(hab_dict %>%
               filter(is.na(MetricGroupName) | MetricGroupName != 'Tier 1 Summary')) %>%
+  select(-Name) %>%
+  left_join(sel_hab_mets %>%
+              select(ShortName = Metric,
+                     Name)) %>%
   mutate_at(vars(ShortName, Name, MetricCategory),
             list(~ fct_reorder(., .x = imp))) %>%
   ggplot(aes(x = Name,
@@ -594,12 +622,16 @@ qrf_mod$importance %>%
   labs(x = 'Metric',
        y = 'Relative Importance')
   
-```
+ ```
 
 ```{r pdp-figure, fig.cap = "Partial dependence plots for the spring/summer Chinook salmon parr capacity quantile regression forest (QRF) model, depicting how parr capacity shifts as each habitat metric changes, assuming all other habitat metrics remain at their mean values. Tick marks along the X-axis depict observed values."}
 plot_partial_dependence(rf_mod = qrf_mod,
                         data = qrf_data,
-                        data_dict = hab_dict,
+                        data_dict = hab_dict %>%
+                          select(-Name) %>%
+                          inner_join(sel_hab_mets %>%
+                                       select(ShortName = Metric,
+                                              Name)),
                         type = 'quantile',
                         pred_quantile = 0.9,
                         log_transform = T,
