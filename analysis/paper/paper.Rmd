@@ -110,6 +110,7 @@ knitr::write_bib(c("FSA",
 ```
 
 ```{r load-data}
+hab_data = read_rds("../data/derived_data/hab_data.rds")
 fish_hab = read_rds("../data/derived_data/fish_hab.rds")
 hab_dict = read_rds("../data/derived_data/hab_dict.rds")
 qrf_data = read_rds("../data/derived_data/qrf_data.rds")
