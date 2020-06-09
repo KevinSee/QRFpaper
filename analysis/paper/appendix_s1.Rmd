@@ -28,6 +28,8 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
     bookdown::html_document2:
       fig_caption: yes
+      fig_height: 8.5
+      fig_width: 6.5
       number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
@@ -263,7 +265,8 @@ hab_corr = tibble(hab_data = list(hab_data)) %>%
                           x %>%
                             select(one_of(y)) %>%
                             cor(use = 'pairwise',
-                                method = 'spearman')
+                                method = 'pearson')
+                                # method = 'spearman')
                         }),
          corr_mat = map(cor_mat,
                         .f = as_cordf),
@@ -280,7 +283,8 @@ hab_corr = tibble(hab_data = list(hab_data)) %>%
                                                  x %>%
                                                    select(one_of(z$ShortName)) %>%
                                                    cor(use = 'pairwise',
-                                                       method = 'spearman')
+                                                       method = 'pearson')
+                                                       # method = 'spearman')
                                                }
                                                }))
                            return(catg_list)
@@ -363,7 +367,7 @@ ggplot(data = mine_res,
   labs(fill = 'Category')
 ```
 
-```{r corr-fig, results='hide', fig.show = "hold", fig.cap = "Correlation plots of metrics, facted by habitat category."}
+```{r corr-fig, eval = F, results='hide', fig.width = 5, fig.height = 5, fig.show = "hold", fig.cap = "Correlation plots of metrics, facted by habitat category."}
 hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)] %>%
   # map(.f = function(x) {
   #   rownames(x) <- tibble(Metric = rownames(x)) %>%
@@ -387,27 +391,55 @@ hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)] %>%
         order = 'FPC')
 ```
 
-```{r corr-fig2, results='hide', fig.show = "hold", fig.cap = "Correlation plots of metrics, facted by habitat category."}
-hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)] %>%
-  # map(.f = function(x) {
-  #   # rownames(x) <- tibble(Metric = rownames(x)) %>%
-  #   #   left_join(hab_dict %>%
-  #   #               select(Metric = ShortName,
-  #   #                      Name) %>%
-  #   #               distinct()) %>%
-  #   #   pull(Name)
-  #   
-  #   colnames(x) <- tibble(Metric = colnames(x)) %>%
-  #     left_join(hab_dict %>%
-  #                 select(Metric = ShortName,
-  #                        Name) %>%
-  #                 distinct()) %>%
-  #     pull(Name)
-  #   return(x)
-  # }) %>%
-  map(.f = ggcorrplot::ggcorrplot,
-      method = 'circle',
-      hc.order = T,
-      type = 'lower',
-      colors = c('blue4', 'white', 'red3'))
+```{r corr-fig2, results='hide', fig.width = 5, fig.height = 5, fig.show = "hold", fig.cap = "Correlation plots of metrics, facted by habitat category."}
+cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]),
+                     cor_mat = hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]) %>%
+  mutate(cor_plot = map2(cor_mat,
+                         Category,
+                         .f = function(x, y) {
+                           ggcorrplot::ggcorrplot(x,
+                                                  method = 'circle',
+                                                  hc.order = T,
+                                                  type = 'lower',
+                                                  title = y,
+                                                  colors = c('blue4', 'white', 'red3'))
+                         }))
+
+cor_plot_df$cor_plot
 ```
+
+
+```{r selected-corr, fig.cap = 'Correlation plot of habitat metrics used in QRF model.'}
+hab_data %>% 
+  select(one_of(sel_hab_mets$Metric)) %>% 
+  cor(use = 'pairwise',
+      method = 'pearson') %>%
+      # method = 'spearman') %>% 
+  # as_cordf() %>%
+  ggcorrplot::ggcorrplot(method = 'circle',
+                         # hc.order = T,
+                         type = 'lower',
+                         # legend.title = "Correlation",
+                         colors = c('blue4', 'white', 'red3'))
+```
+
+```{r high-cor-mets, fig.cap = 'Pairs plot of habitat metrics used in QRF model with a correlation coefficient greater than 0.5.'}
+high_cor_mets = hab_data %>%
+  select(one_of(sel_hab_mets$Metric)) %>%
+  correlate(use = 'pairwise',
+            method = 'pearson') %>%
+            # method = 'spearman') %>%
+  stretch(na.rm = T,
+          remove.dups = T) %>%
+  arrange(desc(abs(r))) %>%
+  filter(abs(r) > 0.5) %>%
+  select(x, y) %>%
+  pivot_longer(cols = c(x, y)) %>%
+  pull(value) %>%
+  unique()
+
+hab_data %>%
+  select(one_of(high_cor_mets)) %>%
+  GGally::ggpairs()
+```
+
