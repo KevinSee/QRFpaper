@@ -2,23 +2,23 @@
 title: "Estimating Carrying Capacity for Chinook Parr using Quantile Random Forest Models"
 author:
   - Kevin E. See:
-      email: Kevin.See@biomark.com
+      email: Kevin.See@merck.com
       institute: [biomark]
       correspondence: true
   - Michael W. Ackerman:
-      email: Mike.Ackerman@biomark.com
+      email: Mike.Ackerman@merck.com
       institute: [biomark]
       correspondence: false
   - Richard A. Carmichael:
-      email: Richie.Carmichael@biomark.com
+      email: Richie.Carmichael@merck.com
       institute: [biomark]
       correspondence: false
   - Sarah L. Hoffmann:
-      email: Sarah.Hoffmann@biomark.com
+      email: Sarah.Hoffmann@merck.com
       institute: [biomark]
       correspondence: false
   - Chris Beasley:
-      email: Chris.Beasley@biomark.com
+      email: Chris.Beasley@merck.com
       institute: [biomark]
       correspondence: false
 institute:
