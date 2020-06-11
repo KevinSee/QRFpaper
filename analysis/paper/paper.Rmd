@@ -25,16 +25,16 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
-    bookdown::word_document2:
+    bookdown::html_document2:
       fig_caption: yes
-      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::html_document2:
+    bookdown::word_document2:
       fig_caption: yes
+      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       number_sections: FALSE
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
@@ -284,7 +284,6 @@ cor_tab = cap_tbl %>%
   pivot_longer(cols = c(BevertonHolt, Ricker, Hockey),
                names_to = "form",
                values_to = "est") %>%
-  # filter(!is.na(est)) %>%
   filter(Population %in% keep_wtsds) %>%
   group_by(form) %>%
   summarise(r = cor(x = QRF, 
