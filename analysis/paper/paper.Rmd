@@ -392,10 +392,6 @@ The results of the QRF parr capacity model for Chinook salmon meet many biologic
 
 The biggest driver of capacity identified in this study is stream size, whether measured by wetted width or discharge, which should be unsurprising since we are using fish per meter as our response. In many ways, these metrics define habitat quantity; however, other metrics used in our QRF model help define habitat quality, such as cooler temperatures in August, less pool-tail fine sediment, and higher channel unit frequencies (a measure of habitat complexity and surrogate for the number of pool-riffle sequences or potential sheer areas providing feeding zones), and fish cover. 
 
-<!-- Richie's comment on the paragraph below: I would say that this is an important part, but I question whether it is appropriate to include in the manuscript? I am fine either way. -->
-
-Moreover, predictions of available habitat capacity seemed to pass the "eye test" when comparing predictions to the actual physical habitat at CHaMP survey locations. That is, areas with higher predicted capacities had habitat that, in our opinion, looked like habitat that would support more juvenile Chinook salmon, whereas areas with lower predicted capacities looked like poorer rearing habitat. As examples, Figure \@ref(fig:site-photo-high) is a photograph of a CHaMP survey site where the model predicted high capacity and is a site with high width:depth ratio and fish cover (in the form of mature willow and cottonwood riparian cover), contains pool-riffle sequences, and some variation in wetted depths. Alternatively, Figure \@ref(fig:site-photo-low) shows a site where the model predicted a much lower capacity, and visually, is much poorer rearing habitat for juvenile Chinook salmon e.g., lower wetted widths, discharge, width:depth ratio and standard deviation of depth. Pairing predictions of capacity from the QRF model with images and expert opinion of good versus bad habitat will be an important ongoing validation in addition to our comparisons with spawner-recruit models.
-
 ## Extrapolation Model
 
 Fish are mobile creatures and determining the appropriate spatial scale to estimate how their capacity may be determined by habitat characteristics is important. In the summer, for Chinook parr, there is clearly movement between multiple channel units (e.g. pool, riffle, run), suggesting that fish are utilizing habitat at a larger scale than the channel unit. However, it is unlikely that they are moving up and down the entire watershed and we believe the 200 - 600 m reaches used in this study are an appropriate scale to capture the fish-habitat relationships that define carrying capacity. At the same time, we acknowledge that managers, life-cycle modelers, and others are often interested in capacity estimates at larger spatial scales. While our QRF model can provide site-specific estimates of carrying capacity derived from paired fish-habitat data, our extrapolation model allows for estimates at larger spatial extents, such as watershed and population levels. This is an efficient technique to leverage existing relationships for meaningful management decisions.
@@ -670,15 +666,6 @@ plot_partial_dependence(rf_mod = qrf_mod,
 spawn_rec_comp_p +
   theme(strip.text = element_text(size = 7))
 ```
-
-```{r site-photo-high, dpi = 300, fig.cap = 'Photo of CHaMP site, CBW05583-415923, with predicted high capacity.'}
-knitr::include_graphics('../figures/SitePhoto_CBW05583-415923.jpg')
-```
-
-```{r site-photo-low, dpi = 300, fig.cap = 'Photo of CHaMP site, CBW05583-109994, with predicted low capacity.'}
-knitr::include_graphics('../figures/SitePhoto_CBW05583-109994.jpg')
-```
-
 
 <!-- The following line inserts a page break  -->
 \newpage
