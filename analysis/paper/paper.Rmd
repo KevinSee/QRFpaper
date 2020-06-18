@@ -24,28 +24,31 @@ author:
 institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: 
-    bookdown::pdf_document2:
+output:
+    bookdown::html_document2:
       fig_caption: yes
       number_sections: FALSE
+      toc: no
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks2.lua
+      - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
     bookdown::word_document2:
       fig_caption: yes
       reference_docx: "../templates/template.docx" # Insert path for the DOCX file
       number_sections: FALSE
+      toc: no
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::html_document2:
+    bookdown::pdf_document2:
       fig_caption: yes
       number_sections: FALSE
+      toc: no
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/author-info-blocks2.lua
       - --lua-filter=../templates/pagebreak.lua
 bibliography:
 - references.bib
@@ -53,7 +56,7 @@ bibliography:
 csl: "../templates/ecological-applications.csl" # Insert path for the bib-style
 # csl: "../templates/canadian-journal-of-fisheries-and-aquatic-sciences.csl"
 abstract: |
-  Might still need some refining...
+  **Might still need some refining...**
   Establishing robust methods and metrics to evaluate habitat quality is critical for the recovery of endangered Pacific salmonids. A variety of modeling approaches are used for status and trend monitoring of anadromous species throughout the Pacific Northwest, USA, but rely on linear fish-habitat relationships and are limited in predictive power beyond specific watersheds. Further, the focus on species distribution and abundance is not easily manipulated to predict carrying capacity and traditional stock-recruitment analyses are reliant on long-term data which are not always available. In this study, we developed a quantile random forest (QRF) model to  provide estimates of habitat carrying capacity for Chinook salmon parr during the summer months, at both the site and watershed scale. QRF models allow for the consideration of noisy data, correlated variables, and non-linear relationships: common features in fish-habitat datasets. We leveraged Columbia Habitat Monitoring Program (CHaMP) data to select habitat co-variates and predict capacity at those sites. We also identified a set of globally available attributes to extrapolate capacity estimate predictions throughout the Columbia River basin. Total capacity estimates for watersheds closely matched estimates from alternative fish productivity models. Carrying capacity estimates based on QRF, like those presented here, provide managers a framework to guide the identification, prioritization, and development of habitat rehabilitation actions to recover salmon populations.
 keywords: |
   carrying capacity; quantile regression; random forests; Chinook; quantile regression forest
@@ -93,7 +96,8 @@ theme_set(theme_bw())
 # panderOptions("big.mark", ',')
 
 options(knitr.kable.NA = '-')
-options(knitr.table.format = "pandoc")
+# options(knitr.table.format = "pandoc")
+# options(knitr.table.format = "latex")
 
 # run this if running chunks directly
 # setwd('analysis/paper')
@@ -126,6 +130,7 @@ all_preds = read_rds("../data/derived_data/all_preds.rds")
 spawn_rec_params = read_rds("../data/derived_data/spawn_rec_params.rds")
 model_svy_df = read_rds("../data/derived_data/model_svy_df.rds")
 champ_wtsds = read_rds("../data/derived_data/champ_wtds.rds")
+gaa_meta = read_rds("../data/derived_data/gaa_metadata.rds")
 
 sel_hab_mets %<>%
   left_join(hab_dict %>%
@@ -471,13 +476,12 @@ qrf_mod$importance %>%
   kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer Chinook salmon parr capacity (during summer months). Metrics are ranked in order of relative importance.",
         booktabs = T,
         format.args = list(width = c(2, 10, 10, 50))) %>%
-  kable_styling()
+  kable_styling() %>%
+  column_spec(4, width = '3in')
   
 ```
 
 ```{r gaa-covars}
-gaa_meta = read_rds("../data/derived_data/gaa_metadata.rds")
-
 tibble(Covariate = gaa_covars) %>%
   left_join(gaa_meta %>%
               select(Covariate = FieldName,
@@ -602,7 +606,10 @@ spawn_rec_params %>%
                              'Chiwawa R.' = 'Chiwawa River')) %>%
   kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile regression forest (QRF) model. Numbers in parentheses are coefficients of variation.",
         booktabs = T) %>%
-  kable_styling()
+  kable_styling() %>%
+  # kable_styling(latex_options = c('scale_down')) %>%
+  column_spec(1, width = "1in") %>%
+  column_spec(c(5:8), width = "0.5in")
 
 ```
 
