@@ -26,22 +26,6 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
-    bookdown::html_document2:
-      fig_caption: yes
-      fig_height: 8.5
-      fig_width: 6.5
-      number_sections: FALSE
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
-    bookdown::word_document2:
-      fig_caption: yes
-      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       fig_height: 8.5
@@ -53,6 +37,22 @@ output:
       - --lua-filter=../templates/pagebreak.lua
       includes:
         in_header: ../templates/header_appendixS.tex
+    bookdown::word_document2:
+      fig_caption: yes
+      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
+    bookdown::html_document2:
+      fig_caption: yes
+      fig_height: 8.5
+      fig_width: 6.5
+      number_sections: FALSE
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
 bibliography:
 - references.bib
 - packages.bib
@@ -87,7 +87,7 @@ theme_set(theme_bw())
 
 # options for table formating with "kable()"
 options(knitr.kable.NA = '-')
-options(knitr.table.format = "pandoc")
+# options(knitr.table.format = "pandoc")
 
 ```
 
@@ -329,13 +329,20 @@ mine_tab_df = mine_res %>%
 mine_tab_df %>%
   select(-selected) %>%
   kable(digits = 3,
-        format = 'html',
+        # format = 'html',
         # format = 'latex',
         booktabs = T,
+        longtable = T,
         caption = 'MIC statistic for top metrics within each habitat category, sorted by category and MIC value. The percent of records for which each habitat metric measurement was missing or zero is also shown. Metrics selected for the QRF model are in bold.') %>%
-  kable_styling(fixed_thead = T) %>%
+  kable_styling(fixed_thead = T,
+                latex_options = c('repeat_header',
+                                  'scale_down',
+                                  'HOLD_position')) %>%
   row_spec(row = which(mine_tab_df$selected),
-           bold = T)
+           bold = T) %>%
+  column_spec(2, width = "2in") %>%
+  column_spec(3, width = "1in") %>%
+  column_spec(c(4:6), width = "0.5in")
   
 ```
 
@@ -354,7 +361,7 @@ mine_res %>%
   coord_flip() +
   facet_wrap(~ MetricCategory,
              scales = 'free_y',
-             ncol = 3) +
+             ncol = 2) +
   theme(legend.position = 'bottom',
         axis.text = element_text(size = 5))
 ```
@@ -399,7 +406,7 @@ hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)] %>%
         order = 'FPC')
 ```
 
-```{r corr-fig, results='hide', fig.width = 5, fig.height = 5, fig.show = "hold", fig.cap = "Correlation plots of metrics, faceted by habitat category."}
+```{r corr-fig, eval = T, results='hide', out.width = "50%", fig.show = "hold", fig.cap = "Correlation plots of metrics, faceted by habitat category. Larger circles correspond to larger correlation coefficients. The colors correspond to the correlation coefficient as well, and range from blue (-1) to white (0) to red (1)."}
 cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]),
                      cor_mat = hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]) %>%
   mutate(cor_plot = map2(cor_mat,
@@ -411,6 +418,28 @@ cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$ca
                                                   type = 'lower',
                                                   title = y,
                                                   colors = c('blue4', 'white', 'red3'))
+                         }))
+
+# for(i in 1:nrow(cor_plot_df)) {
+#   print(cor_plot_df$cor_plot[i])
+# }
+cor_plot_df$cor_plot
+
+# cowplot::plot_grid(plotlist = cor_plot_df$cor_plot,
+#                    ncol = 2)
+
+```
+
+```{r corr-fig2, eval = F, out.width = "50%", fig.cap = "Correlation plots of metrics, faceted by habitat category. Larger circles correspond to larger correlation coefficients. The colors correspond to the correlation coefficient as well, and range from blue (-1) to white (0) to red (1)."}
+cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]),
+                     cor_mat = hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]) %>%
+  mutate(cor_plot = map2(cor_mat,
+                         Category,
+                         .f = function(x, y) {
+                           corrplot::corrplot.mixed(x,
+                                                    upper = 'ellipse',
+                                                    tl.pos = 'lt',
+                                                    order = 'FPC')
                          }))
 
 cor_plot_df$cor_plot

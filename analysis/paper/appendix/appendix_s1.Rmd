@@ -1,0 +1,497 @@
+---
+title: "Appendix S1"
+subtitle: "Estimating Carrying Capacity for Chinook Parr using Quantile Random Forest Models"
+author:
+  - Kevin E. See:
+      email: Kevin.See@biomark.com
+      institute: [biomark]
+      correspondence: true
+  - Michael W. Ackerman:
+      email: Mike.Ackerman@biomark.com
+      institute: [biomark]
+      correspondence: false
+  - Richard A. Carmichael:
+      email: Richie.Carmichael@biomark.com
+      institute: [biomark]
+      correspondence: false
+  - Sarah L. Hoffmann:
+      email: Sarah.Hoffmann@biomark.com
+      institute: [biomark]
+      correspondence: false
+  - Chris Beasley:
+      email: Chris.Beasley@biomark.com
+      institute: [biomark]
+      correspondence: false
+institute:
+  - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+    bookdown::html_document2:
+      fig_caption: yes
+      fig_height: 8.5
+      fig_width: 6.5
+      number_sections: FALSE
+      pandoc_args:
+      - --lua-filter=../../templates/scholarly-metadata.lua
+      - --lua-filter=../../templates/author-info-blocks.lua
+      - --lua-filter=../../templates/pagebreak.lua
+    bookdown::word_document2:
+      fig_caption: yes
+      reference_docx: "../../templates/template.docx" # Insert path for the DOCX file
+      pandoc_args:
+      - --lua-filter=../../templates/scholarly-metadata.lua
+      - --lua-filter=../../templates/author-info-blocks.lua
+      - --lua-filter=../../templates/pagebreak.lua
+    bookdown::pdf_document2:
+      fig_caption: yes
+      fig_height: 8.5
+      fig_width: 6.5
+      toc: no
+      pandoc_args:
+      - --lua-filter=../../templates/scholarly-metadata.lua
+      - --lua-filter=../../templates/author-info-blocks2.lua
+      - --lua-filter=../../templates/pagebreak.lua
+      includes:
+        in_header: ../../templates/header_appendixS.tex
+bibliography:
+- ../references.bib
+- ../packages.bib
+csl: "../../templates/ecological-applications.csl" # Insert path for the bib-style
+---
+
+<!-- Find a way to add the journal name (Ecological Applications) to the top  -->
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE,
+  comment = "#>",
+  fig.path = "../../figures/appendix/",
+  dpi = 600,
+  appendix = TRUE
+)
+```
+
+```{r packages}
+# setwd('analysis/paper')
+
+library(tidyverse)
+library(minerva)
+library(QRFpaper)
+library(kableExtra)
+
+# set theme for ggplot2
+theme_set(theme_bw())
+
+# options for table formating with "kable()"
+options(knitr.kable.NA = '-')
+# options(knitr.table.format = "pandoc")
+
+```
+
+```{r load-data}
+fish_hab = read_rds("../../data/derived_data/fish_hab.rds")
+hab_dict = read_rds("../../data/derived_data/hab_dict.rds")
+sel_hab_mets = read_rds("../../data/derived_data/sel_hab_mets.rds")
+hab_data = read_rds("../../data/derived_data/hab_data.rds")
+```
+
+```{r}
+# what are some possible habitat covariates?
+poss_hab_mets = tibble(ShortName = names(fish_hab)) %>%
+  distinct() %>%
+  left_join(hab_dict %>%
+              filter(! MetricGroupName %in% c('Tier 1 Summary', 'Tier 2 Summary')) %>%
+              select(ShortName, MetricGroupName, Name, MetricCategory) %>%
+              distinct()) %>%
+  filter(is.na(MetricCategory) | MetricCategory != 'Categorical') %>%
+  filter((!is.na(Name) |
+            ShortName %in% c('Elev_M',
+                             'CUMDRAINAG',
+                             "DpthThlwg_Avg",
+                             "SCSm_Area",
+                             "SCSm_Freq",
+                             "SCSm_Ct",
+                             "SCSm_Vol",
+                             "RipCovUstoryNone",
+                             "RipCovGrndNone",
+                             "SC_Area",
+                             "SC_Area_Pct",
+                             "ChnlUnitTotal_Ct",
+                             "Discharge_fish",
+                             "Temp",
+                             "PercentIceCover",
+                             "LWCount",
+                             "SubEstBdrk",
+                             "Ucut_Length",
+                             "FishCovAll",
+                             "SubEstCandBldr",
+                             "UcutLgth",
+                             "LWcnt_Wet"))) %>%
+  mutate(Name = if_else(is.na(Name),
+                        ShortName,
+                        Name)) %>%
+  filter(!ShortName %in% c('Tier1', 'Tier2')) %>%
+  mutate(MetricCategory = if_else(grepl('SC', ShortName),
+                                  'SideChannel',
+                                  MetricCategory),
+         MetricCategory = if_else(grepl('Sub', ShortName),
+                                  'Substrate',
+                                  MetricCategory),
+         MetricCategory = if_else(grepl('^Rip', ShortName),
+                                  'Riparian',
+                                  MetricCategory),
+         MetricCategory = if_else(grepl('^FishCov', ShortName) |
+                                    grepl('Ucut', ShortName) |
+                                    ShortName %in% c('PercentIceCover'),
+                                  'Cover',
+                                  MetricCategory),
+         MetricCategory = if_else(grepl('^LW', ShortName),
+                                  'Wood',
+                                  MetricCategory),
+         MetricCategory = if_else(grepl('Discharge', ShortName) |
+                                    ShortName %in% c("DpthThlwg_Avg",
+                                                     "Dpth_Max",
+                                                     'DpthThlwgExit',
+                                                     'DpthResid',
+                                                     'TotalVol',
+                                                     'CUMDRAINAG'),
+                                  'Size',
+                                  MetricCategory),
+         MetricCategory = if_else(ShortName %in% c('Elev_M', 'Temp'),
+                                  'Temperature',
+                                  MetricCategory),
+         MetricCategory = if_else(ShortName %in% c('ChnlUnitTotal_Ct'),
+                                  'ChannelUnit',
+                                  MetricCategory)) %>%
+  select(-MetricGroupName)
+
+# remove Land Classification metrics
+poss_hab_mets <- poss_hab_mets %>%
+  filter(MetricCategory != 'Land Classification')
+
+# # what columns in fish_hab are not in poss_hab_mets?
+# names(fish_hab)[!names(fish_hab) %in% poss_hab_mets$ShortName]
+```
+
+```{r mine-stats}
+#-----------------------------------------------------------------
+# generate MINE statistics
+#-----------------------------------------------------------------
+mine_res = tibble(species = unique(fish_hab$Species),
+                  fh_data = list(fish_hab)) %>%
+  mutate(metrics = map(fh_data,
+                       .f = function(x) {
+                         poss_hab_mets %>%
+                           filter(ShortName %in% names(x)) %>%
+                           pull(ShortName)
+                       })) %>%
+  mutate(mine_res = map2(fh_data,
+                         metrics,
+                         .f = function(x, y) {
+                           if(sum(x$fish_dens == 0) == 0) {
+                             try(x %>%
+                                   mutate(fish_dens = log(fish_dens)) %>%
+                                   estimate_MIC(covars = y,
+                                                response = 'fish_dens'))
+                           } else {
+                             try(x %>%
+                                   mutate(fish_dens = log(fish_dens + 0.005)) %>%
+                                   estimate_MIC(covars = y,
+                                                response = 'fish_dens'))
+                           }
+                         })) %>%
+  select(species, mine_res) %>%
+  unnest(cols = mine_res) %>%
+  left_join(poss_hab_mets,
+            by = c('Metric' = 'ShortName')) %>%
+  select(species, MetricCategory, Metric, Name, everything()) %>%
+  # put the metric names in descending order by MIC
+  mutate_at(vars(Metric, Name),
+            list(~ fct_reorder(., .x = MIC))) %>%
+  arrange(species, MetricCategory, desc(MIC)) %>%
+      # filter out some metrics with too many NAs or 0s
+      # filter((perc_NA < 0.5 & non_0 > 100)) %>%
+      # filter out metrics with very low variance
+      # filter(var < 0.1) %>%
+      # filter(obsCV < 0.1)
+      # filter out area and volume metrics
+      filter(!grepl('Area$', Metric),
+             !grepl('Vol$', Metric),
+             !Metric %in% c('Lgth_Wet', 
+                            'Lgth_BfChnl',
+                            'Lgth_WetChnl',
+                            'Area_Wet', 
+                            'Area_Bf', 
+                            'WetVol', 
+                            'BfVol')) %>%
+  mutate(selected = if_else(Metric %in% sel_hab_mets$Metric,
+                            T, F))
+
+```
+
+```{r calc-correlations}
+library(corrr)
+
+hab_corr = tibble(hab_data = list(hab_data)) %>%
+  mutate(metrics = map(hab_data,
+                       .f = function(x) {
+                         mets = poss_hab_mets %>%
+                           filter(ShortName %in% names(x)) %>%
+                           pull(ShortName)
+                         x %>%
+                           select(one_of(mets)) %>%
+                           gather(Metric, value) %>%
+                           group_by(Metric) %>%
+                           summarise(n_tot = n(),
+                                     n_NA = sum(is.na(value)),
+                                     non_0 = sum(value != 0, na.rm = T)) %>%
+                           mutate(perc_NA = n_NA / n_tot,
+                                  perc_non_0 = non_0 / n_tot) %>%
+                           filter(perc_NA < 0.5,
+                                  non_0 > 100) %>%
+                           filter(!grepl('Area$', Metric),
+                                  !grepl('Vol$', Metric),
+                                  !Metric %in% c('Lgth_Wet', 
+                                                 'Lgth_BfChnl',
+                                                 'Lgth_WetChnl',
+                                                 'Area_Wet', 
+                                                 'Area_Bf', 
+                                                 'WetVol', 
+                                                 'BfVol')) %>%
+                           pull(Metric)
+                       }),
+         cor_mat = map2(hab_data,
+                        metrics,
+                        .f = function(x, y) {
+                          x %>%
+                            select(one_of(y)) %>%
+                            cor(use = 'pairwise',
+                                method = 'pearson')
+                                # method = 'spearman')
+                        }),
+         corr_mat = map(cor_mat,
+                        .f = as_cordf),
+         catg_cor = map2(hab_data,
+                         metrics,
+                         .f = function(x, y) {
+                           catg_list = try(poss_hab_mets %>%
+                                             filter(ShortName %in% y) %>%
+                                             split(list(.$MetricCategory)) %>%
+                                             map(.f = function(z) {
+                                               if(nrow(z) == 1) {
+                                                 return(NULL)
+                                               } else {
+                                                 x %>%
+                                                   select(one_of(z$ShortName)) %>%
+                                                   cor(use = 'pairwise',
+                                                       method = 'pearson')
+                                                       # method = 'spearman')
+                                               }
+                                               }))
+                           return(catg_list)
+                                             }))
+
+```
+
+
+# Choosing Habitat Covariates
+
+One of the crucial steps in building this carrying capacity model was choosing which habitat covariates to include. Random forest models naturally incorporate interactions between correlated covariates, which is essential since nearly all habitat variables are considered correlated to one degree or another, however, we aimed to avoid overly redundant variables (i.e., variables that measure similar aspects of the habitat). Further, including too many covariates can result in overfitting of the model (e.g., including as many covariates as data points). Our goal was to select a group of covariates that captured as many different aspects of the stream habitat (e.g., substrate, flow, riparian condition, channel unit configuration, etc.) as possible, while still holding information about fish densities.
+
+To prevent overfitting, we pared down the more than 100 metrics generated by the CHaMP protocol describing the quantity and quality of fish habitat for each survey site. Habitat metrics were first grouped into broad categories that included channel unit configuration, complexity, fish cover, riparian areas, side channels, stream size, substrate, temperature, water quality, and woody debris. Habitat metrics measuring any large wood volume were scaled by the site length (in 100 m units). To assist in determining the habitat metrics to include in the QRF model, we used the Maximal Information-Based Nonparametric Exploration (MINE) class of statistics [@Reshef2011] to determine those habitat characteristics (covariates) most highly associated with the log of observed parr densities. We calculated the maximal information coefficient (MIC), using the R package *minerva* [@R-minerva], to measure the strength of the linear or non-linear association between the natural log of fish density and each habitat metric [@Reshef2011]. MIC is a measure of correlation that incorporates potential non-linear associations; for example, if there is a quadratic association the MIC value could be high, even when the standard correlation coefficient is low. We excluded categorical variables such as channel type (e.g., meandering, pool-riffle, plane-bed, etc.) because we assumed that other quantitative metrics would capture the differences between those qualitative categorical metrics.
+
+Within each category, metrics were ranked according to their MIC value (Table \@ref(tab:mic-tab) and Figure \@ref(fig:mine-facet-fig)). The MIC value of each measured habitat characteristic and parr density was used to inform decisions on which habitat covariates to include in the QRF parr capacity model. We selected one or two variables amongst those with the highest MIC scores within each category, attempting to avoid covariates that were too highly correlated (Figure \@ref(fig:corr-fig)), while focusing on covariates we thought could influence fish behavior. For example, cumulative drainage area, mean annual flow and observed discharge are all highly correlated, but fish really only experience the observed discharge, so we chose to include that metric in our QRF model. We also tried to include covariates that can be directly influenced by rehabilitation actions or have been shown to impact salmonid juvenile density. Finally, we attempted to avoid metrics with too many missing values, or too many zero values, in the data set, as well as metrics that may have too much observer error [@Rosgen2018]. 
+
+<!-- The following line inserts a page break  -->
+\newpage
+
+# References 
+<!-- The following line ensures the references appear here for the MS Word or HTML output files, rather than right at the end of the document (this will not work for PDF files):  -->
+<div id="refs"></div>
+
+\newpage
+
+# Tables
+
+```{r mic-tab}
+mine_tab_df = mine_res %>%
+  mutate(`Percent 0-value` = 1 - perc_non0) %>%
+  group_by(MetricCategory) %>%
+  slice(1:10) %>%
+  select(Category = MetricCategory,
+         Name,
+         Abbrv = Metric,
+         MIC,
+         `Percent Missing` = perc_NA,
+         `Percent 0-value`,
+         selected)
+
+mine_tab_df %>%
+  select(-selected) %>%
+  kable(digits = 3,
+        # format = 'html',
+        # format = 'latex',
+        booktabs = T,
+        longtable = T,
+        caption = 'MIC statistic for top metrics within each habitat category, sorted by category and MIC value. The percent of records for which each habitat metric measurement was missing or zero is also shown. Metrics selected for the QRF model are in bold.') %>%
+  kable_styling(fixed_thead = T,
+                latex_options = c('repeat_header',
+                                  'scale_down',
+                                  'HOLD_position')) %>%
+  row_spec(row = which(mine_tab_df$selected),
+           bold = T) %>%
+  column_spec(2, width = "2in") %>%
+  column_spec(3, width = "1in") %>%
+  column_spec(c(4:6), width = "0.5in")
+  
+```
+
+# Figures
+
+```{r mine-facet-fig, fig.cap = 'Barplots of MIC statistics, faceted by habitat category.'}
+mine_res %>%
+  mutate(MetricCategory = recode(MetricCategory,
+                                 'ChannelUnit' = 'Channel\nUnit',
+                                 'SideChannel' = 'Side\nChannel',
+                                 'WaterQuality' = 'Water\nQuality')) %>%
+  ggplot(aes(x = Name,
+             y = MIC)) +
+  geom_col(fill = 'blue') +
+  coord_flip() +
+  facet_wrap(~ MetricCategory,
+             scales = 'free_y',
+             ncol = 2) +
+  theme(legend.position = 'bottom',
+        axis.text = element_text(size = 5))
+```
+
+
+```{r mine-all-fig, fig.cap = 'Barplot of MIC statistics, colored by habitat category.'}
+ggplot(data = mine_res,
+       aes(x = Name,
+           y = MIC,
+           fill = MetricCategory)) +
+  geom_col() +
+  coord_flip() +
+  # scale_fill_viridis_d() +
+  scale_fill_brewer(palette = 'Set3',
+                    guide = guide_legend(nrow = 2)) +
+  theme(legend.position = 'bottom',
+        axis.text = element_text(size = 6)) +
+  labs(fill = 'Category')
+```
+
+```{r corr-fig1, eval = F, results='hide', fig.width = 5, fig.height = 5, fig.show = "hold", fig.cap = "Correlation plots of metrics, faceted by habitat category."}
+hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)] %>%
+  # map(.f = function(x) {
+  #   rownames(x) <- tibble(Metric = rownames(x)) %>%
+  #     left_join(hab_dict %>%
+  #                 select(Metric = ShortName,
+  #                        Name) %>%
+  #                 distinct()) %>%
+  #     pull(Name)
+  #   
+  #   # colnames(x) <- tibble(Metric = colnames(x)) %>%
+  #   #   left_join(hab_dict %>%
+  #   #               select(Metric = ShortName,
+  #   #                      Name) %>%
+  #   #               distinct()) %>%
+  #   #   pull(Name)
+  #   return(x)
+  # }) %>%
+    map(.f = corrplot::corrplot.mixed,
+        upper = 'ellipse',
+        tl.pos = 'lt',
+        order = 'FPC')
+```
+
+```{r corr-fig, eval = T, results='hide', out.width = "90%", fig.show = "hold", fig.cap = "Correlation plots of metrics, faceted by habitat category. Larger circles correspond to larger correlation coefficients. The colors correspond to the correlation coefficient as well, and range from blue (-1) to white (0) to red (1)."}
+cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]),
+                     cor_mat = hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]) %>%
+  mutate(cor_plot = map2(cor_mat,
+                         Category,
+                         .f = function(x, y) {
+                           ggcorrplot::ggcorrplot(x,
+                                                  method = 'circle',
+                                                  hc.order = T,
+                                                  type = 'lower',
+                                                  title = y,
+                                                  colors = c('blue4', 'white', 'red3'))
+                         }))
+
+cor_plot_df$cor_plot
+
+```
+
+```{r corr-fig2, eval = F, out.width = "50%", fig.cap = "Correlation plots of metrics, faceted by habitat category. Larger circles correspond to larger correlation coefficients. The colors correspond to the correlation coefficient as well, and range from blue (-1) to white (0) to red (1)."}
+cor_plot_df = tibble(Category = names(hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]),
+                     cor_mat = hab_corr$catg_cor[[1]][!sapply(hab_corr$catg_cor[[1]], is.null)]) %>%
+  mutate(cor_plot = map2(cor_mat,
+                         Category,
+                         .f = function(x, y) {
+                           corrplot::corrplot.mixed(x,
+                                                    upper = 'ellipse',
+                                                    tl.pos = 'lt',
+                                                    order = 'FPC')
+                         }))
+
+cor_plot_df$cor_plot
+```
+
+
+```{r selected-corr, fig.cap = 'Correlation plot of habitat metrics used in the QRF model.'}
+hab_data %>% 
+  select(one_of(sel_hab_mets$Metric)) %>% 
+  cor(use = 'pairwise',
+      method = 'pearson') %>%
+      # method = 'spearman') %>% 
+  # as_cordf() %>%
+  ggcorrplot::ggcorrplot(method = 'circle',
+                         # hc.order = T,
+                         type = 'lower',
+                         # legend.title = "Correlation",
+                         colors = c('blue4', 'white', 'red3'))
+```
+
+```{r high-cor-mets, fig.cap = 'Pairs plot of habitat metrics used in QRF model with a correlation coefficient greater than 0.5.'}
+high_cor_mets = hab_data %>%
+  select(one_of(sel_hab_mets$Metric)) %>%
+  correlate(use = 'pairwise',
+            method = 'pearson') %>%
+            # method = 'spearman') %>%
+  stretch(na.rm = T,
+          remove.dups = T) %>%
+  arrange(desc(abs(r))) %>%
+  filter(abs(r) > 0.5) %>%
+  select(x, y) %>%
+  pivot_longer(cols = c(x, y)) %>%
+  pull(value) %>%
+  unique()
+
+hab_data %>%
+  select(one_of(high_cor_mets)) %>%
+  GGally::ggpairs()
+```
+
+<!-- The following line inserts a page break  -->
+\newpage
+
+### Colophon
+
+This report was generated on `r Sys.time()` using the following computational environment and dependencies: 
+
+```{r colophon, cache = FALSE}
+# which R packages and versions?
+if ("devtools" %in% installed.packages()) devtools::session_info()
+```
+
+The current Git commit details are:
+
+```{r}
+# what commit is this file at? 
+if ("git2r" %in% installed.packages() & git2r::in_repository(path = ".")) git2r::repository(here::here())  
+```
+
