@@ -1111,7 +1111,7 @@ library(FSA)
 bh1 <- srFuns('BevertonHolt',
               param = 3)
 
-data("spawn_rec_data")
+data("spawn_recr_data")
 # fit Beverton-Holt curve with capacity fixed at QRF capacity prediction
 qrf_params = spawn_recr_data %>%
   group_by(Population) %>%
@@ -1171,7 +1171,9 @@ qrf_params = spawn_recr_data %>%
 data("spawn_rec_params")
 
 spawn_rec_params %<>%
-  bind_rows(qrf_params)
+  bind_rows(qrf_params %>%
+              select(one_of(names(spawn_rec_params)))) %>%
+  arrange(Population, form)
 
 # save complete table
 write_rds(spawn_rec_params,
