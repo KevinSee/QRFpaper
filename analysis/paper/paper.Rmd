@@ -33,15 +33,6 @@ output:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
-    bookdown::word_document2:
-      fig_caption: yes
-      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
-      number_sections: FALSE
-      toc: no
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       number_sections: FALSE
@@ -50,14 +41,24 @@ output:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks2.lua
       - --lua-filter=../templates/pagebreak.lua
+    bookdown::word_document2:
+      fig_caption: yes
+      # reference_docx: "../templates/EcologicalApplicationsTemplate.docx" # Insert path for the DOCX file
+      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
+      number_sections: FALSE
+      toc: no
+      always_allow_html: true
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
 bibliography:
 - references.bib
 - packages.bib
 csl: "../templates/ecological-applications.csl" # Insert path for the bib-style
 # csl: "../templates/canadian-journal-of-fisheries-and-aquatic-sciences.csl"
 abstract: |
-  **Might still need some refining...**
-  Establishing robust methods and metrics to evaluate habitat quality is critical for the recovery of endangered Pacific salmonids. A variety of modeling approaches are used for status and trend monitoring of anadromous species throughout the Pacific Northwest, USA, but rely on linear fish-habitat relationships and are limited in predictive power beyond specific watersheds. Further, the focus on species distribution and abundance is not easily manipulated to predict carrying capacity and traditional stock-recruitment analyses are reliant on long-term data which are not always available. In this study, we developed a quantile random forest (QRF) model to  provide estimates of habitat carrying capacity for Chinook salmon parr during the summer months, at both the site and watershed scale. QRF models allow for the consideration of noisy data, correlated variables, and non-linear relationships: common features in fish-habitat datasets. We leveraged Columbia Habitat Monitoring Program (CHaMP) data to select habitat co-variates and predict capacity at those sites. We also identified a set of globally available attributes to extrapolate capacity estimate predictions throughout the Columbia River basin. Total capacity estimates for watersheds closely matched estimates from alternative fish productivity models. Carrying capacity estimates based on QRF, like those presented here, provide managers a framework to guide the identification, prioritization, and development of habitat rehabilitation actions to recover salmon populations.
+  Establishing robust methods and metrics to evaluate habitat quality is critical for the recovery of endangered Pacific salmonids. A variety of modeling approaches are used for status and trend monitoring of anadromous species throughout the Pacific Northwest, USA, but current methods often fail the capture the complex relationship between fish and habitat and are often limited in predictive power beyond specific watersheds. Further, the focus on species distribution and abundance is not easily manipulated to predict carrying capacity and traditional stock-recruitment analyses are reliant on long-term data which are not always available. In this study, we developed a quantile random forest (QRF) model to  provide estimates of habitat carrying capacity for Chinook salmon parr during the summer months, at both the site and watershed scale. QRF models allow for the consideration of noisy data, correlated variables, and non-linear relationships: common features in fish-habitat datasets. We leveraged Columbia Habitat Monitoring Program (CHaMP) data to select habitat co-variates and predict capacity at those sites. We also identified a set of globally available attributes to extrapolate capacity estimate predictions throughout the Columbia River basin. Total capacity estimates for watersheds closely matched estimates from alternative fish productivity models. Carrying capacity estimates based on QRF, like those presented here, provide managers a framework to guide the identification, prioritization, and development of habitat rehabilitation actions to recover salmon populations.
 keywords: |
   carrying capacity; quantile regression; random forests; Chinook; quantile regression forest
 highlights: |
@@ -81,7 +82,6 @@ knitr::opts_chunk$set(
 ```{r packages}
 library(survey)
 library(tidyverse)
-# library(QRFcapacity) # for the moment, until we know exactly what data to copy over to this repo
 library(QRFpaper)
 library(janitor)
 library(knitr)
@@ -93,11 +93,10 @@ library(kableExtra)
 
 theme_set(theme_bw())
 
-# panderOptions("big.mark", ',')
-
 options(knitr.kable.NA = '-')
+
+# when knitting to Word, use this
 # options(knitr.table.format = "pandoc")
-# options(knitr.table.format = "latex")
 
 # run this if running chunks directly
 # setwd('analysis/paper')
@@ -132,6 +131,7 @@ model_svy_df = read_rds("../data/derived_data/model_svy_df.rds")
 champ_wtsds = read_rds("../data/derived_data/champ_wtds.rds")
 gaa_meta = read_rds("../data/derived_data/gaa_metadata.rds")
 
+# change some of the names of metrics for plotting purposes
 sel_hab_mets %<>%
   left_join(hab_dict %>%
               select(Metric = ShortName,
@@ -146,8 +146,9 @@ sel_hab_mets %<>%
                        'Wetted Width Integrated' = 'Wetted Width',
                        'Substrate < 6mm' = 'Fines',
                        # 'Substrate: D16',
+                       'Channel Unit Frequency' = 'Channel Unit\nFrequency',
                        'Avg. August Temperature' = 'Avg. August Temp.',
-                       'Large Wood Volume: Wetted Slow Water' = 'Large Wood Freq. in Pools'))
+                       'Large Wood Volume: Wetted Slow Water' = 'Large Wood\nFreq. in Pools'))
                        
 ```
 
@@ -221,15 +222,22 @@ keep_wtsds = c('Catherine Creek',
                'Lostine River',
                'South Fork Salmon River')
 
+# scale the parr numbers for the plot
+scale_parr = 100000
+
 spawn_rec_comp_p = spawn_rec_params %>%
   # filter out a couple populations with super poor fits
   filter(Population %in% keep_wtsds) %>%
   select(Population, data) %>%
   unnest(cols = "data") %>%
   distinct() %>%
+  mutate_at(vars(Parr),
+            list(~ . / scale_parr)) %>%
   ggplot(aes(x = Spawners,
              y = Parr)) +
   geom_polygon(data = cap_poly %>%
+                 mutate_at(vars(y),
+                           list(~ . / scale_parr)) %>%
                  # filter out a couple populations with super poor fits
                  filter(Population %in% keep_wtsds),
               aes(x = x,
@@ -237,11 +245,15 @@ spawn_rec_comp_p = spawn_rec_params %>%
                   fill = form),
               alpha = 0.2) +
   geom_line(data = curve_fits %>%
+              mutate_at(vars(Parr),
+                        list(~ . / scale_parr)) %>%
               # filter out a couple populations with super poor fits
               filter(Population %in% keep_wtsds),
             aes(color = form),
             lwd = 1.5) +
   geom_hline(data = cap_tbl %>%
+               mutate_at(vars(est),
+                         list(~ . / scale_parr)) %>%
                # filter out a couple populations with super poor fits
                filter(Population %in% keep_wtsds),
              aes(yintercept = est,
@@ -270,7 +282,9 @@ spawn_rec_comp_p = spawn_rec_params %>%
                                'Ricker',
                                'Hockey Stick'),
                     name = 'Model') +
-  labs(shape = 'Spawner\nType') +
+  labs(shape = 'Spawner\nType',
+       y = 'Parr (x100,000)') +
+  scale_y_continuous(breaks = scales::breaks_pretty(n = 3)) +
   theme(legend.position = 'bottom')
 
 # # to save a different version
@@ -457,7 +471,9 @@ qrf_data %>%
   
 ```
 
-```{r select-mets-table}
+\newpage
+
+```{r select-mets-table, eval = T}
 qrf_mod$importance %>%
   as_tibble(rownames = 'ShortName') %>%
   rename(imp = IncNodePurity) %>%
@@ -467,7 +483,8 @@ qrf_mod$importance %>%
   left_join(hab_dict %>%
               select(-Name) %>%
               inner_join(sel_hab_mets %>%
-                           rename(ShortName = Metric))) %>%
+                           rename(ShortName = Metric)) %>%
+              mutate(Name = str_replace(Name, '\n', ' '))) %>%
   filter(MetricGroupName != 'Tier 1 Summary') %>%
   select(Rank,
          Metric = Name,
@@ -481,7 +498,9 @@ qrf_mod$importance %>%
   
 ```
 
-```{r gaa-covars}
+\newpage
+
+```{r gaa-covars, eval = T}
 tibble(Covariate = gaa_covars) %>%
   left_join(gaa_meta %>%
               select(Covariate = FieldName,
@@ -519,7 +538,9 @@ tibble(Covariate = gaa_covars) %>%
 
 ```
 
-```{r extrap-r2-table}
+\newpage
+
+```{r extrap-r2-table, eval = T}
 model_svy_df %>%
   ungroup() %>%
   mutate(n_full = map_dbl(data,
@@ -573,8 +594,9 @@ model_svy_df %>%
   
 ```
 
+\newpage
 
-```{r sr-table}
+```{r sr-table, eval = T}
 spawn_rec_params %>%
   select(Population, data) %>%
   unnest(data) %>%
@@ -620,9 +642,11 @@ spawn_rec_params %>%
 <div id="figures"></div>
 
 ```{r wtsd-map, fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
-# knitr::include_graphics('../figures/ChampWtds.png')
-knitr::include_graphics('../figures/ChampWtds.jpeg')
+knitr::include_graphics('../figures/ChampWtds.png')
+# knitr::include_graphics('../figures/ChampWtds.jpeg')
 ```
+
+\newpage
 
 ```{r rel-imp-figure, fig.cap = "Relative importance of each habitat covariate included in the quantile regression forest (QRF) model to predict habitat capacity, during summer months, for spring/summer Chinook salmon parr"}
 qrf_mod$importance %>%
@@ -649,6 +673,8 @@ qrf_mod$importance %>%
   
 ```
 
+\newpage
+
 ```{r pdp-figure, fig.cap = "Partial dependence plots for the spring/summer Chinook salmon parr capacity quantile regression forest (QRF) model, depicting how parr capacity shifts as each habitat metric changes, assuming all other habitat metrics remain at their mean values. Tick marks along the X-axis depict observed values."}
 plot_partial_dependence(rf_mod = qrf_mod,
                         data = qrf_data,
@@ -668,7 +694,9 @@ plot_partial_dependence(rf_mod = qrf_mod,
         strip.text = element_text(size = 6))
 ```
 
-```{r sr-figure, fig.cap = "Spawner-recruit data from nine watersheds. Solid lines are the spawner-recruit curve, dashed lines are the estimated capacity, and shaded polygons depict the 95% confidence intervals of capacity. Red corresponds to Beverton-Holt models, purple to Ricker models, blue to hockey stick models, and green to QRF estimates. The QRF solid curve is a Beverton-Holt model with the capacity parameter fixed to the QRF estimate of capacity."}
+\newpage
+
+```{r sr-figure, fig.height = 5, fig.cap = "Spawner-recruit data from nine watersheds. Solid lines are the spawner-recruit curve, dashed lines are the estimated capacity, and shaded polygons depict the 95% confidence intervals of capacity. Red corresponds to Beverton-Holt models, purple to Ricker models, blue to hockey stick models, and green to QRF estimates. The QRF solid curve is a Beverton-Holt model with the capacity parameter fixed to the QRF estimate of capacity. A few curves with high capacity estimates were not plotted to improve readability."}
 
 spawn_rec_comp_p +
   theme(strip.text = element_text(size = 7))
@@ -681,14 +709,14 @@ spawn_rec_comp_p +
 
 This report was generated on `r Sys.time()` using the following computational environment and dependencies: 
 
-```{r colophon, cache = FALSE}
+```{r colophon, cache = FALSE, eval = T}
 # which R packages and versions?
 if ("devtools" %in% installed.packages()) devtools::session_info()
 ```
 
 The current Git commit details are:
 
-```{r}
+```{r, eval = T}
 # what commit is this file at? 
 if ("git2r" %in% installed.packages() & git2r::in_repository(path = ".")) git2r::repository(here::here())  
 ```
