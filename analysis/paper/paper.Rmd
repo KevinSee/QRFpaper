@@ -25,22 +25,6 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
-    bookdown::html_document2:
-      fig_caption: yes
-      number_sections: FALSE
-      toc: no
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
-    bookdown::pdf_document2:
-      fig_caption: yes
-      number_sections: FALSE
-      toc: no
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks2.lua
-      - --lua-filter=../templates/pagebreak.lua
     bookdown::word_document2:
       fig_caption: yes
       # reference_docx: "../templates/EcologicalApplicationsTemplate.docx" # Insert path for the DOCX file
@@ -52,6 +36,28 @@ output:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
       - --lua-filter=../templates/pagebreak.lua
+    bookdown::pdf_document2:
+      fig_caption: yes
+      number_sections: FALSE
+      toc: no
+      geometry: margin=1in
+      latex_engine: "xelatex"
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks2.lua
+      - --lua-filter=../templates/pagebreak.lua
+      includes:
+        in_header: ../templates/header_manuscript.tex
+    bookdown::html_document2:
+      fig_caption: yes
+      number_sections: FALSE
+      toc: no
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
+fontsize: 12pt
+mainfont: Times New Roman
 bibliography:
 - references.bib
 - packages.bib
@@ -96,7 +102,7 @@ theme_set(theme_bw())
 options(knitr.kable.NA = '-')
 
 # when knitting to Word, use this
-# options(knitr.table.format = "pandoc")
+options(knitr.table.format = "pandoc")
 
 # run this if running chunks directly
 # setwd('analysis/paper')
