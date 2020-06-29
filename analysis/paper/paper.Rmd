@@ -454,7 +454,7 @@ Model development efforts have been funded by the Bonneville Power Administratio
 <!-- The following line inserts a page break  -->
 \newpage
 
-# References 
+# Literature Cited 
 <!-- The following line ensures the references appear here for the MS Word or HTML output files, rather than right at the end of the document (this will not work for PDF files):  -->
 <div id="refs"></div>
 
