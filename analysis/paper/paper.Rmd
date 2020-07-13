@@ -1,5 +1,5 @@
 ---
-title: "Estimating Carrying Capacity for Chinook Parr using Quantile Random Forest Models"
+title: "Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models"
 author:
   - Kevin E. See:
       email: Kevin.See@merck.com
@@ -102,7 +102,12 @@ theme_set(theme_bw())
 options(knitr.kable.NA = '-')
 
 # when knitting to Word, use this
-options(knitr.table.format = "pandoc")
+# what kind of document is being created?
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+
+if(doc.type == 'docx') {
+  options(knitr.table.format = "pandoc")
+}
 
 # run this if running chunks directly
 # setwd('analysis/paper')
