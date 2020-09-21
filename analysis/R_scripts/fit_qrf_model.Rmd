@@ -48,7 +48,12 @@ fish_hab = fh_sum_champ_2017 %>%
   mutate_at(vars(starts_with('LWVol')),
             list(~ . / Lgth_Wet * 100)) %>%
   mutate(RipCovCanSome = 100 - RipCovCanNone)
-  
+
+# # to use fish / m2
+# fish_hab %<>%
+#   mutate(fish_dens = N / FishWettedArea) %>%
+#   filter(!is.na(fish_dens),
+#          FishWettedArea > 0)
 
 # and the appropriate habitat dictionrary to go with it
 data("hab_dict_2017")
@@ -147,17 +152,20 @@ max_snap_dist = 1000
 
 # which of those sites are in Chinook domain?
 chnk_sites = chnk_samps %>%
-  as_Spatial() %>%
-  maptools::snapPointsToLines(points = .,
-                              lines = chnk_domain %>%
-                                mutate(id = 1:n()) %>%
-                                select(id, MPG) %>%
-                                as_Spatial(),
-                              maxDist = max_snap_dist,
-                              withAttrs = TRUE,
-                              idField = 'id') %>%
-  as('sf') %>%
-  select(-nearest_line_id, -snap_dist)
+  bind_cols(chnk_samps %>%
+              as_Spatial() %>%
+              maptools::snapPointsToLines(points = .,
+                                          lines = chnk_domain %>%
+                                            mutate(id = 1:n()) %>%
+                                            select(id, MPG) %>%
+                                            as_Spatial(),
+                                          withAttrs = F,
+                                          idField = 'id') %>%
+              as('sf') %>%
+              st_drop_geometry() %>%
+              as_tibble() %>%
+              select(snap_dist)) %>%
+  filter(snap_dist <= max_snap_dist)
 
 fish_hab %<>%
   filter(Site %in% chnk_sites$Site)
@@ -178,10 +186,6 @@ poss_hab_mets = hab_dict %>%
   filter(ShortName %in% names(fish_hab)) %>%
   pull(ShortName) %>%
   unique()
-
-# poss_hab_mets = c(poss_hab_mets, 'aug_temp', 'avg_aug_temp') %>%
-#   unique()
-
 
 mine_res = fish_hab %>%
   mutate(fish_dens = log(fish_dens + 0.005)) %>%
@@ -487,25 +491,36 @@ pred_hab_sites = hab_impute %>%
          chnk_per_m = exp(chnk_per_m) - dens_offset,
          chnk_per_m2 = chnk_per_m * Lgth_Wet / Area_Wet)
 
+# # if using fish / m2 as response
+# # predict at all CHaMP sites
+# pred_hab_sites = hab_impute %>%
+#   mutate(chnk_per_m2 = predict(qrf_mod,
+#                               newdata = select(., one_of(covars)),
+#                               what = pred_quant),
+#          chnk_per_m2 = exp(chnk_per_m2) - dens_offset,
+#          chnk_per_m = chnk_per_m2 * Area_Wet / Lgth_Wet)
+
+
 # filter out sites outside the Chinook domain
 data("chnk_domain")
-snap_dist = 1000
+my_snap_dist = 1000
 
 pred_hab_sites_chnk = pred_hab_sites %>%
   filter(!is.na(LON_DD)) %>%
-  st_as_sf(coords = c('LON_DD', 'LAT_DD'),
-           crs = 4326) %>%
-  st_transform(crs = st_crs(chnk_domain)) %>%
-  as_Spatial() %>%
-  maptools::snapPointsToLines(chnk_domain %>%
-                                mutate(id = 1:n()) %>%
-                                select(id, MPG) %>%
-                                as_Spatial(),
-                              maxDist = snap_dist,
-                              withAttrs = T,
-                              idField = 'id') %>%
-  as('sf') %>%
-  as_tibble() %>%
+  bind_cols(pred_hab_sites %>%
+              filter(!is.na(LON_DD)) %>%
+              st_as_sf(coords = c('LON_DD', 'LAT_DD'),
+                       crs = 4326) %>%
+              st_transform(crs = st_crs(chnk_domain)) %>%
+              as_Spatial() %>%
+              maptools::snapPointsToLines(chnk_domain %>%
+                                            mutate(id = 1:n()) %>%
+                                            select(id, MPG) %>%
+                                            as_Spatial(),
+                                          idField = 'id') %>%
+              as('sf') %>%
+              as_tibble()) %>%
+  filter(snap_dist <= my_snap_dist) %>%
   select(-nearest_line_id, -snap_dist, -geometry)
 
 ```
