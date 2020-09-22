@@ -20,4 +20,4 @@ Suggests:
     devtools,
     git2r,
     testthat
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
