@@ -26,18 +26,6 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
-    bookdown::word_document2:
-      fig_caption: yes
-      toc: no
-      always_allow_html: true
-      number_sections: FALSE
-      fig_height: 7
-      fig_width: 6
-      reference_docx: "../../templates/template.docx" # Insert path for the DOCX file
-      pandoc_args:
-      - --lua-filter=../../templates/scholarly-metadata.lua
-      - --lua-filter=../../templates/author-info-blocks.lua
-      - --lua-filter=../../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       fig_height: 8.5
@@ -52,6 +40,18 @@ output:
       - --lua-filter=../../templates/pagebreak.lua
       includes:
         in_header: ../../templates/header_appendixS.tex
+    bookdown::word_document2:
+      fig_caption: yes
+      toc: no
+      always_allow_html: true
+      number_sections: FALSE
+      fig_height: 7
+      fig_width: 6
+      reference_docx: "../../templates/template.docx" # Insert path for the DOCX file
+      pandoc_args:
+      - --lua-filter=../../templates/scholarly-metadata.lua
+      - --lua-filter=../../templates/author-info-blocks.lua
+      - --lua-filter=../../templates/pagebreak.lua
     bookdown::html_document2:
       fig_caption: yes
       fig_height: 8.5
@@ -79,7 +79,7 @@ knitr::opts_chunk$set(
   echo = FALSE,
   comment = "#>",
   fig.path = "../../figures/appendix/",
-  dpi = 600,
+  dpi = 400,
   appendix = TRUE
 )
 ```
@@ -459,9 +459,10 @@ if(doc.type == 'docx') {
 
 ```
 
+\newpage
 # Figures
 
-```{r mine-facet-fig, fig.cap = 'Barplots of MIC statistics, faceted by habitat category.'}
+```{r mine-facet-fig, fig.height = 6.7, fig.cap = 'Barplots of MIC statistics, faceted by habitat category.'}
 mine_res %>%
   mutate(MetricCategory = recode(MetricCategory,
                                  'ChannelUnit' = 'Channel\nUnit',
