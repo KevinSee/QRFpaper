@@ -11,7 +11,7 @@ knitr::opts_chunk$set(
   fig.path = "README-"
 )
 # Please put your title here to include it in the file below.
-Title <- "Estimating Life-Stage Specific Habitat Capacity for Anadromous Salmonids using Quantile Random Forest Models"
+Title <- "Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models"
 Authors <- "See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah Hoffman, and Chris Beasley"
 yr <- 2020
 Journal <- "Ecosphere"

@@ -8,17 +8,16 @@
 This repository contains the data and code for our paper:
 
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
-> Hoffman, and Chris Beasley (2020). *Estimating Life-Stage Specific
-> Habitat Capacity for Anadromous Salmonids using Quantile Random Forest
-> Models*. Ecosphere <https://doi.org/xxx/xxx>
+> Hoffman, and Chris Beasley (2020). *Estimating Carrying Capacity for
+> Juvenile Salmon using Quantile Random Forest Models*. Ecosphere
+> <https://doi.org/xxx/xxx>
 
 Our pre-print is online here:
 
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
-> Hoffman, and Chris Beasley (2020). *Estimating Life-Stage Specific
-> Habitat Capacity for Anadromous Salmonids using Quantile Random Forest
-> Models*. Ecosphere, Accessed 30 Nov 2020. Online at
-> <https://doi.org/xxx/xxx>
+> Hoffman, and Chris Beasley (2020). *Estimating Carrying Capacity for
+> Juvenile Salmon using Quantile Random Forest Models*. Ecosphere,
+> Accessed 01 Dec 2020. Online at <https://doi.org/xxx/xxx>
 
 ### How to cite
 
@@ -26,9 +25,9 @@ Please cite this compendium as:
 
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
 > Hoffman, and Chris Beasley, (2020). *Compendium of R code and data for
-> Estimating Life-Stage Specific Habitat Capacity for Anadromous
-> Salmonids using Quantile Random Forest Models*. Accessed 30 Nov 2020.
-> Online at <https://doi.org/xxx/xxx>
+> Estimating Carrying Capacity for Juvenile Salmon using Quantile Random
+> Forest Models*. Accessed 01 Dec 2020. Online at
+> <https://doi.org/xxx/xxx>
 
 ### How to download or install
 
