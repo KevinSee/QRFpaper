@@ -31,6 +31,7 @@ output:
       toc: no
       geometry: margin=1in
       latex_engine: "xelatex"
+      keep_tex: true
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks2.lua
@@ -82,7 +83,8 @@ knitr::opts_chunk$set(
   echo = FALSE,
   comment = "#>",
   fig.path = "../figures/",
-  dpi = 600
+  dpi = 400,
+  dev = c("pdf", 'tiff')
 )
 ```
 
@@ -103,7 +105,7 @@ library(english)
 library(kableExtra)
 library(ggpubr)
 
-theme_set(theme_pubr())
+theme_set(theme_pubr(base_family = "Helvetica"))
 
 options(knitr.kable.NA = '-')
 
@@ -468,7 +470,8 @@ qrf_data %>%
   rename(`n Sites` = n,
          Percent = percent) %>%
   kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer-run Chinook salmon parr capacity QRF model',
-        booktabs = T) %>%
+        booktabs = T,
+        linesep = "") %>%
   kable_styling(latex_options = c("hold_position"))
   
 ```
@@ -494,6 +497,7 @@ qrf_mod$importance %>%
          Description = DescriptiveText) %>%
   kable(caption = "Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer-run Chinook salmon parr capacity. Metrics are ranked in order of relative importance.",
         booktabs = T,
+        linesep = "",
         format.args = list(width = c(2, 10, 10, 50))) %>%
   kable_styling(latex_options = c("hold_position")) %>%
   column_spec(4, width = '3in')
@@ -533,7 +537,8 @@ tibble(Covariate = gaa_covars) %>%
   rename(`Spatial Scale` = SpatialScale,
          Covariate = Name) %>%
   kable(caption = "Globally available attribute (GAA) habitat covariates used to extrapolate quantile random forest (QRF) model predictions of spring/summer-run Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.",
-        booktabs = T, 
+        booktabs = T,
+        linesep = "", 
         escape = F,
         digits = 3) %>%
   kable_styling(latex_options = c("hold_position"))
@@ -591,6 +596,7 @@ model_svy_df %>%
   kable(caption = "Summary of extrapolation model fits, split by whether the extrapolation model used CHaMP watershed as a covariate or not.",
         escape = F,
         booktabs = T,
+        linesep = "",
         digits = 3) %>%
   kable_styling(latex_options = c("hold_position"))
   
@@ -629,13 +635,18 @@ spawn_rec_params %>%
   mutate(Population = recode(Population,
                              'Chiwawa R.' = 'Chiwawa River')) %>%
   kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile random forest (QRF) model. Numbers in parentheses are coefficients of variation.",
-        booktabs = T) %>%
+        booktabs = T,
+        linesep = "") %>%
   kable_styling(latex_options = c("hold_position")) %>%
   # kable_styling(latex_options = c('scale_down')) %>%
   column_spec(1, width = "1in") %>%
   column_spec(c(5:8), width = "0.5in")
 
 ```
+
+\newpage
+
+\listoffigures
 
 \newpage
 
