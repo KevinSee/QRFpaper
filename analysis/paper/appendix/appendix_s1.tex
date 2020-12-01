@@ -1,0 +1,797 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  12pt,
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+  \setmainfont[]{Times New Roman}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Appendix S1 - Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models},
+  pdfauthor={Kevin E. See1,, Michael W. Ackerman1, Richard A. Carmichael1, Sarah L. Hoffmann1, and Chris Beasley1},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% set figure and table numbering
+\usepackage{longtable}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{table}{0}
+
+% double spacing
+\usepackage{setspace}
+\doublespacing
+% to double space figure captions
+\usepackage{caption}
+\captionsetup{font = doublespacing}
+
+% % line numbers
+% \usepackage{lineno}
+% \linenumbers
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{Appendix S1 - \emph{Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models}}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Ecospheres}
+\author{Kevin E. See\textsuperscript{1,*}, 
+    \and Michael W. Ackerman\textsuperscript{1}, 
+    \and Richard A. Carmichael\textsuperscript{1},
+    \and Sarah L. Hoffmann\textsuperscript{1}, 
+    \and Chris Beasley\textsuperscript{1}}
+\date{December 01, 2020}
+
+\begin{document}
+\maketitle
+
+\textsuperscript{1} Biomark, Inc.~705 South 8th St., Boise, Idaho, 83702, USA
+
+\textsuperscript{*} Correspondence: \href{mailto:Kevin.See@merck.com}{Kevin E. See \textless{}\href{mailto:Kevin.See@merck.com}{\nolinkurl{Kevin.See@merck.com}}\textgreater{}}
+
+\hypertarget{choosing-habitat-covariates}{%
+\section{Choosing Habitat Covariates}\label{choosing-habitat-covariates}}
+
+One of the crucial steps in building this carrying capacity model was choosing which habitat covariates to include. Random forest models naturally incorporate interactions between correlated covariates, which is essential since nearly all habitat variables are considered correlated to one degree or another, however, we aimed to avoid overly redundant variables (i.e., variables that measure similar aspects of the habitat). Further, including too many covariates can result in overfitting of the model (e.g., including as many covariates as data points). Our goal was to select a group of covariates that captured as many different aspects of the stream habitat (e.g., substrate, flow, riparian condition, channel unit configuration, etc.) as possible, while still holding information about fish densities.
+
+To prevent overfitting, we pared down the more than 100 metrics generated by the CHaMP protocol describing the quantity and quality of fish habitat for each survey site. Habitat metrics were first grouped into broad categories that included channel unit configuration, complexity, fish cover, riparian areas, side channels, stream size, substrate, temperature, water quality, and woody debris. Habitat metrics measuring any large wood volume were scaled by the site length (in 100 m units). To assist in determining the habitat metrics to include in the QRF model, we used the Maximal Information-Based Nonparametric Exploration (MINE) class of statistics (Reshef et al. 2011) to determine those habitat characteristics (covariates) most highly associated with the log of observed parr densities. We calculated the maximal information coefficient (MIC), using the R package \emph{minerva} (Filosi et al. 2019), to measure the strength of the linear or non-linear association between the natural log of fish density and each habitat metric (Reshef et al. 2011). MIC is a measure of correlation that incorporates potential non-linear associations; for example, if there is a quadratic association the MIC value could be high, even when the standard correlation coefficient is low. We excluded categorical variables such as channel type (e.g., meandering, pool-riffle, plane-bed, etc.) because we assumed that other quantitative metrics would capture the differences between those qualitative categorical metrics.
+
+Within each category, metrics were ranked according to their MIC value (Table \ref{tab:mic-tab} and Figures \ref{fig:mine-facet-fig} and \ref{fig:mine-all-fig}). The MIC value of each measured habitat characteristic and parr density was used to inform decisions on which habitat covariates to include in the QRF parr capacity model. We selected one or two variables amongst those with the highest MIC scores within each category, attempting to avoid covariates that were too highly correlated (Table \ref{tab:corr-tab}), while focusing on covariates we thought could influence fish behavior. For example, cumulative drainage area, mean annual flow and observed discharge are all highly correlated, but fish really only experience the observed discharge, so we chose to include that metric in our QRF model. We also tried to include covariates that can be directly influenced by rehabilitation actions or have been shown to impact salmonid juvenile density. Finally, we attempted to avoid metrics with too many missing values, or too many zero values, in the data set, as well as metrics that may have too much observer error (Rosgen et al. 2018).
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+We chose 12 metrics, highlighted in bold in Table \ref{tab:mic-tab}. Their correlations with each other are displayed in Figure \ref{fig:selected-corr}. Those with a high correlation coefficient (\(\geq\) 0.5 or \(\leq\) -0.5) are plotted against each other in Figure \ref{fig:high-cor-mets} to show the variety in values even for pairs of metrics with relatively high correlations.
+
+\newpage
+
+\hypertarget{literature-cited}{%
+\section{Literature Cited}\label{literature-cited}}
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-R-minerva}{}%
+Filosi, M., R. Visintainer, and D. Albanese. 2019. Minerva: Maximal information-based nonparametric exploration for variable analysis.
+
+\leavevmode\hypertarget{ref-Reshef2011}{}%
+Reshef, D. N., Y. A. Reshef, H. K. Finucane, S. R. Grossman, G. McVean, P. J. Turnbaugh, E. S. Lander, M. Mitzenmacher, and P. C. Sabeti. 2011. Detecting novel associations in large data sets. Science 334:1518--1524.
+
+\leavevmode\hypertarget{ref-Rosgen2018}{}%
+Rosgen, D., A. Taillacq, B. Rosgen, and D. Geenen. 2018. A technical review of the Columbia Habitat Monitoring Program's protocol, data quality.
+
+\newpage
+
+\hypertarget{tables}{%
+\section{Tables}\label{tables}}
+
+\begin{longtable}[t]{l>{\raggedright\arraybackslash}p{2in}>{\raggedright\arraybackslash}p{1in}>{\raggedleft\arraybackslash}p{0.5in}>{\raggedleft\arraybackslash}p{0.5in}>{\raggedleft\arraybackslash}p{0.5in}}
+\caption{\label{tab:mic-tab}MIC statistic for top metrics within each habitat category, sorted by category and MIC value. The percent of records for which each habitat metric measurement was missing or zero is also shown. Metrics selected for the QRF model are in bold.}\\
+\toprule
+Category & Name & Abbrv & MIC & Percent Missing & Percent 0-value\\
+\midrule
+\endfirsthead
+\caption[]{\label{tab:mic-tab}MIC statistic for top metrics within each habitat category, sorted by category and MIC value. The percent of records for which each habitat metric measurement was missing or zero is also shown. Metrics selected for the QRF model are in bold. \textit{(continued)}}\\
+\toprule
+Category & Name & Abbrv & MIC & Percent Missing & Percent 0-value\\
+\midrule
+\endhead
+\
+\endfoot
+\bottomrule
+\endlastfoot
+\textbf{ChannelUnit} & \textbf{Channel Unit Frequency} & \textbf{CU\_Freq} & \textbf{0.241} & \textbf{0.021} & \textbf{0.021}\\
+ChannelUnit & Fast Turbulent Frequency & FstTurb\_Freq & 0.230 & 0.021 & 0.082\\
+ChannelUnit & Fast NonTurbulent Frequency & FstNT\_Freq & 0.209 & 0.021 & 0.308\\
+ChannelUnit & Slow Water Frequency & SlowWater\_Freq & 0.208 & 0.021 & 0.073\\
+ChannelUnit & Fast Turbulent Percent & FstTurb\_Pct & 0.195 & 0.021 & 0.082\\
+\addlinespace
+ChannelUnit & Channel Unit Count & CU\_Ct & 0.189 & 0.021 & 0.021\\
+ChannelUnit & Fast Turbulent Count & FstTurb\_Ct & 0.178 & 0.021 & 0.082\\
+ChannelUnit & Slow Water Percent & SlowWater\_Pct & 0.177 & 0.021 & 0.073\\
+ChannelUnit & Fast NonTurbulent Percent & FstNT\_Pct & 0.169 & 0.021 & 0.308\\
+ChannelUnit & Fast NonTurbulent Count & FstNT\_Ct & 0.166 & 0.021 & 0.308\\
+\addlinespace
+\textbf{Complexity} & \textbf{Wetted Width To Depth Ratio Avg} & \textbf{WetWDRat\_Avg} & \textbf{0.247} & \textbf{0.003} & \textbf{0.003}\\
+Complexity & Bankfull Width To Depth Ratio Avg & BfWDRat\_Avg & 0.245 & 0.003 & 0.003\\
+\textbf{Complexity} & \textbf{Wetted Depth SD} & \textbf{DpthWet\_SD} & \textbf{0.232} & \textbf{0.003} & \textbf{0.003}\\
+\textbf{Complexity} & \textbf{Wetted Channel Braidedness} & \textbf{WetBraid} & \textbf{0.212} & \textbf{0.003} & \textbf{0.003}\\
+Complexity & Bankfull Channel Braidedness & BfBraid & 0.211 & 0.003 & 0.003\\
+\addlinespace
+Complexity & Wetted Channel Qualifying Island Count & Wet\_QIsland\_Ct & 0.209 & 0.003 & 0.835\\
+Complexity & Bankfull Width CV & BfWdth\_CV & 0.209 & 0.003 & 0.003\\
+Complexity & Bankfull Width To Depth Ratio CV & BfWDRat\_CV & 0.202 & 0.003 & 0.003\\
+Complexity & Detrended Elevation SD & DetrendElev\_SD & 0.196 & 0.003 & 0.003\\
+Complexity & Bankfull Channel Qualifying Island Count & Bf\_QIsland\_Ct & 0.193 & 0.003 & 0.780\\
+\addlinespace
+\textbf{Cover} & \textbf{Fish Cover: Total} & \textbf{FishCovTotal} & \textbf{0.225} & \textbf{0.021} & \textbf{0.030}\\
+Cover & Fish Cover: None & FishCovNone & 0.224 & 0.021 & 0.021\\
+Cover & Fish Cover: LW & FishCovLW & 0.213 & 0.021 & 0.155\\
+Cover & Fish Cover: Terrestrial Vegetation & FishCovTVeg & 0.204 & 0.021 & 0.052\\
+Cover & Percent Undercut by Length & UcutLgth\_Pct & 0.185 & 0.000 & 0.476\\
+\addlinespace
+Cover & Percent Undercut by Area & UcutArea\_Pct & 0.184 & 0.000 & 0.476\\
+Cover & Fish Cover: Aquatic Vegetation & FishCovAqVeg & 0.166 & 0.296 & 0.631\\
+Cover & Fish Cover: Artificial & FishCovArt & 0.136 & 0.021 & 0.851\\
+Riparian & Riparian Cover: Understory & RipCovUstory & 0.206 & 0.000 & 0.000\\
+Riparian & RipCovUstoryNone & RipCovUstoryNone & 0.206 & 0.000 & 0.000\\
+\addlinespace
+Riparian & Riparian Cover: No Canopy & RipCovCanNone & 0.194 & 0.000 & 0.000\\
+\textbf{Riparian} & \textbf{Riparian Cover: Some Canopy} & \textbf{RipCovCanSome} & \textbf{0.194} & \textbf{0.000} & \textbf{0.095}\\
+Riparian & Riparian Cover: Big Tree & RipCovBigTree & 0.184 & 0.000 & 0.183\\
+Riparian & Riparian Cover: Ground & RipCovGrnd & 0.182 & 0.000 & 0.000\\
+Riparian & RipCovGrndNone & RipCovGrndNone & 0.170 & 0.000 & 0.003\\
+\addlinespace
+Riparian & Riparian Cover: Woody & RipCovWood & 0.168 & 0.000 & 0.000\\
+Riparian & Riparian Cover: Non-Woody & RipCovNonWood & 0.166 & 0.000 & 0.000\\
+Riparian & Riparian Cover: Coniferous & RipCovConif & 0.164 & 0.009 & 0.192\\
+SideChannel & Bankfull Side Channel Width & BfSCWdth & 0.223 & 0.796 & 0.796\\
+SideChannel & Wetted Side Channel Width & WetSCWdth & 0.213 & 0.832 & 0.832\\
+\addlinespace
+SideChannel & Wetted Side Channel Percent By Area & WetSC\_Pct & 0.209 & 0.021 & 0.820\\
+SideChannel & SCSm\_Freq & SCSm\_Freq & 0.153 & 0.021 & 0.921\\
+SideChannel & SCSm\_Ct & SCSm\_Ct & 0.153 & 0.021 & 0.921\\
+SideChannel & SC\_Area\_Pct & SC\_Area\_Pct & 0.153 & 0.021 & 0.921\\
+Size & Mean Annual Flow & MeanU & 0.346 & 0.476 & 0.476\\
+\addlinespace
+\textbf{Size} & \textbf{Wetted Width Integrated} & \textbf{WetWdth\_Int} & \textbf{0.332} & \textbf{0.003} & \textbf{0.003}\\
+Size & Bankfull Width Integrated & BfWdthInt & 0.324 & 0.003 & 0.003\\
+Size & Wetted Width Avg & WetWdth\_Avg & 0.324 & 0.003 & 0.003\\
+Size & Drainage Area (Flowline) & CUMDRAINAG & 0.302 & 0.341 & 0.341\\
+Size & Bankfull Width Avg & BfWdth\_Avg & 0.298 & 0.003 & 0.003\\
+\addlinespace
+Size & DpthThlwg\_Avg & DpthThlwg\_Avg & 0.280 & 0.003 & 0.003\\
+\textbf{Size} & \textbf{Discharge} & \textbf{Q} & \textbf{0.259} & \textbf{0.037} & \textbf{0.037}\\
+Size & Bankfull Depth Avg & DpthBf\_Avg & 0.245 & 0.018 & 0.018\\
+Size & Bankfull Depth Max & DpthBf\_Max & 0.240 & 0.018 & 0.018\\
+\textbf{Substrate} & \textbf{Substrate < 6mm} & \textbf{SubLT6} & \textbf{0.237} & \textbf{0.049} & \textbf{0.055}\\
+\addlinespace
+Substrate & Substrate < 2mm & SubLT2 & 0.227 & 0.049 & 0.082\\
+\textbf{Substrate} & \textbf{Substrate: D16} & \textbf{SubD16} & \textbf{0.219} & \textbf{0.012} & \textbf{0.012}\\
+Substrate & Substrate: Embeddedness Avg & SubEmbed\_Avg & 0.204 & 0.293 & 0.317\\
+Substrate & Substrate: D50 & SubD50 & 0.197 & 0.012 & 0.012\\
+Substrate & Substrate Est: Sand and Fines & SubEstSandFines & 0.190 & 0.021 & 0.030\\
+\addlinespace
+Substrate & Substrate Est: Cobbles & SubEstCbl & 0.185 & 0.021 & 0.027\\
+Substrate & Substrate: D84 & SubD84 & 0.185 & 0.012 & 0.012\\
+Substrate & Substrate Est: Boulders & SubEstBldr & 0.183 & 0.021 & 0.149\\
+Substrate & Substrate: Embeddedness SD & SubEmbed\_SD & 0.181 & 0.302 & 0.320\\
+\textbf{Temperature} & \textbf{Avg. August Temperature} & \textbf{avg\_aug\_temp} & \textbf{0.272} & \textbf{0.000} & \textbf{0.000}\\
+\addlinespace
+Temperature & Elev\_M & Elev\_M & 0.262 & 0.363 & 0.363\\
+Temperature & August Temperature & aug\_temp & 0.188 & 0.155 & 0.155\\
+Temperature & Solar Access: Summer Avg & SolarSummr\_Avg & 0.186 & 0.070 & 0.070\\
+WaterQuality & Conductivity & Cond & 0.254 & 0.024 & 0.027\\
+WaterQuality & Alkalinity & Alk & 0.225 & 0.009 & 0.027\\
+\addlinespace
+WaterQuality & Drift Biomass & DriftBioMass & 0.000 & 0.277 & 0.384\\
+Wood & Large Wood Volume: Bankfull Slow Water & LWVol\_BfSlow & 0.213 & 0.003 & 0.232\\
+\textbf{Wood} & \textbf{Large Wood Volume: Wetted Slow Water} & \textbf{LWVol\_WetSlow} & \textbf{0.207} & \textbf{0.003} & \textbf{0.290}\\
+Wood & Large Wood Frequency: Wetted & LWFreq\_Wet & 0.199 & 0.003 & 0.125\\
+Wood & Large Wood Volume: Bankfull & LWVol\_Bf & 0.189 & 0.003 & 0.085\\
+\addlinespace
+Wood & Large Wood Volume: Wetted Fast Turbulent & LWVol\_WetFstTurb & 0.187 & 0.003 & 0.274\\
+Wood & Large Wood Frequency: Bankfull & LWFreq\_Bf & 0.178 & 0.003 & 0.085\\
+Wood & Large Wood Volume: Bankfull Fast NonTurbulent & LWVol\_BfFstNT & 0.175 & 0.003 & 0.521\\
+Wood & Large Wood Volume: Wetted & LWVol\_Wet & 0.166 & 0.003 & 0.125\\
+Wood & Large Wood Volume: Wetted Fast NonTurbulent & LWVol\_WetFstNT & 0.159 & 0.003 & 0.595\\*
+\end{longtable}
+
+\begin{longtable}[t]{>{\raggedright\arraybackslash}p{1in}>{\raggedright\arraybackslash}p{2in}>{\raggedright\arraybackslash}p{2in}r}
+\caption{\label{tab:corr-tab}Pearson correlation coefficient between each variable within a habitat category.}\\
+\toprule
+Category & Metric 1 & Metric 2 & r\\
+\midrule
+\endfirsthead
+\caption[]{\label{tab:corr-tab}Pearson correlation coefficient between each variable within a habitat category. \textit{(continued)}}\\
+\toprule
+Category & Metric 1 & Metric 2 & r\\
+\midrule
+\endhead
+\
+\endfoot
+\bottomrule
+\endlastfoot
+Channel Unit & Slow Water Frequency & Channel Unit Frequency & 0.88\\
+Channel Unit & Slow Water Count & Channel Unit Count & 0.87\\
+Channel Unit & Fast Turbulent Frequency & Channel Unit Frequency & 0.84\\
+Channel Unit & Fast NonTurbulent Count & Fast NonTurbulent Frequency & 0.84\\
+Channel Unit & Fast Turbulent Count & Fast Turbulent Frequency & 0.80\\
+\addlinespace
+Channel Unit & Slow Water Count & Slow Water Frequency & 0.77\\
+Channel Unit & Slow Water Percent & Fast Turbulent Percent & -0.74\\
+Channel Unit & Channel Unit Count & Channel Unit Frequency & 0.73\\
+Channel Unit & Fast Turbulent Count & Channel Unit Count & 0.73\\
+Channel Unit & Slow Water Frequency & Channel Unit Count & 0.69\\
+\addlinespace
+Channel Unit & Fast NonTurbulent Count & Fast NonTurbulent Percent & 0.65\\
+Channel Unit & Fast NonTurbulent Frequency & Channel Unit Frequency & 0.63\\
+Channel Unit & Fast Turbulent Count & Channel Unit Frequency & 0.60\\
+Channel Unit & Slow Water Count & Channel Unit Frequency & 0.59\\
+Channel Unit & Slow Water Frequency & Fast Turbulent Frequency & 0.59\\
+\addlinespace
+Channel Unit & Fast Turbulent Frequency & Channel Unit Count & 0.56\\
+Channel Unit & Fast NonTurbulent Count & Channel Unit Count & 0.56\\
+Channel Unit & Fast Turbulent Percent & Fast NonTurbulent Percent & -0.55\\
+Channel Unit & Slow Water Count & Slow Water Percent & 0.54\\
+Channel Unit & Fast NonTurbulent Percent & Fast NonTurbulent Frequency & 0.52\\
+\addlinespace
+Channel Unit & Fast NonTurbulent Frequency & Channel Unit Count & 0.46\\
+Channel Unit & Slow Water Percent & Slow Water Frequency & 0.46\\
+Channel Unit & Fast Turbulent Percent & Fast NonTurbulent Count & -0.45\\
+Channel Unit & Slow Water Count & Fast Turbulent Count & 0.41\\
+Channel Unit & Slow Water Count & Fast Turbulent Percent & -0.40\\
+\addlinespace
+Channel Unit & Fast NonTurbulent Count & Channel Unit Frequency & 0.39\\
+Channel Unit & Fast Turbulent Count & Slow Water Frequency & 0.39\\
+Channel Unit & Slow Water Frequency & Fast NonTurbulent Frequency & 0.38\\
+Channel Unit & Fast Turbulent Percent & Fast NonTurbulent Frequency & -0.37\\
+Channel Unit & Fast Turbulent Frequency & Fast NonTurbulent Frequency & 0.36\\
+\addlinespace
+Channel Unit & Fast Turbulent Percent & Slow Water Frequency & -0.31\\
+Channel Unit & Slow Water Count & Fast Turbulent Frequency & 0.30\\
+Channel Unit & Slow Water Count & Fast NonTurbulent Count & 0.29\\
+Channel Unit & Fast Turbulent Percent & Channel Unit Count & -0.26\\
+Channel Unit & Fast Turbulent Count & Fast Turbulent Percent & 0.26\\
+\addlinespace
+Channel Unit & Slow Water Percent & Channel Unit Count & 0.26\\
+Channel Unit & Slow Water Percent & Channel Unit Frequency & 0.21\\
+Channel Unit & Slow Water Count & Fast NonTurbulent Frequency & 0.21\\
+Channel Unit & Fast NonTurbulent Count & Slow Water Frequency & 0.20\\
+Channel Unit & Fast Turbulent Count & Fast NonTurbulent Frequency & 0.19\\
+\addlinespace
+Channel Unit & Fast Turbulent Count & Fast NonTurbulent Count & 0.19\\
+Channel Unit & Fast Turbulent Percent & Channel Unit Frequency & -0.19\\
+Channel Unit & Fast Turbulent Count & Fast NonTurbulent Percent & -0.19\\
+Channel Unit & Fast Turbulent Percent & Fast Turbulent Frequency & 0.18\\
+Channel Unit & Slow Water Percent & Fast Turbulent Count & -0.17\\
+\addlinespace
+Channel Unit & Fast NonTurbulent Percent & Fast Turbulent Frequency & -0.16\\
+Channel Unit & Slow Water Percent & Fast NonTurbulent Percent & -0.14\\
+Channel Unit & Fast NonTurbulent Count & Fast Turbulent Frequency & 0.13\\
+Channel Unit & Fast NonTurbulent Percent & Slow Water Frequency & -0.11\\
+Channel Unit & Slow Water Count & Fast NonTurbulent Percent & -0.09\\
+\addlinespace
+Channel Unit & Slow Water Percent & Fast Turbulent Frequency & -0.09\\
+Channel Unit & Fast NonTurbulent Percent & Channel Unit Count & 0.06\\
+Channel Unit & Slow Water Percent & Fast NonTurbulent Frequency & 0.03\\
+Channel Unit & Fast NonTurbulent Percent & Channel Unit Frequency & 0.02\\
+Channel Unit & Slow Water Percent & Fast NonTurbulent Count & 0.01\\
+\hline
+\addlinespace
+Complexity & Bankfull Width CV & Bankfull Width To Depth Ratio CV & 0.84\\
+Complexity & Wetted Channel Braidedness & Bankfull Channel Braidedness & 0.83\\
+Complexity & Bankfull Width To Depth Ratio Avg & Wetted Width To Depth Ratio Avg & 0.78\\
+Complexity & Wetted Channel Braidedness & Wetted Channel Qualifying Island Count & 0.78\\
+Complexity & Bankfull Channel Braidedness & Bankfull Channel Qualifying Island Count & 0.78\\
+\addlinespace
+Complexity & Bankfull Width CV & Wetted Width CV & 0.76\\
+Complexity & Wetted Channel Qualifying Island Count & Bankfull Channel Qualifying Island Count & 0.76\\
+Complexity & Wetted Channel Braidedness & Bankfull Channel Qualifying Island Count & 0.66\\
+Complexity & Bankfull Channel Braidedness & Wetted Channel Qualifying Island Count & 0.61\\
+Complexity & Bankfull Width To Depth Ratio CV & Wetted Width CV & 0.57\\
+\addlinespace
+Complexity & Wetted Width CV & Wetted Width To Depth Ratio CV & 0.57\\
+Complexity & Thalweg Depth CV & Wetted Width To Depth Ratio CV & 0.51\\
+Complexity & Bankfull Width To Depth Ratio CV & Wetted Width To Depth Ratio CV & 0.50\\
+Complexity & Bankfull Width CV & Wetted Width To Depth Ratio CV & 0.46\\
+Complexity & Thalweg Depth CV & Wetted Width CV & 0.44\\
+\addlinespace
+Complexity & Wetted Depth SD & Bankfull Width To Depth Ratio Avg & 0.35\\
+Complexity & Thalweg Depth CV & Bankfull Width To Depth Ratio CV & 0.30\\
+Complexity & Thalweg Depth CV & Bankfull Width CV & 0.29\\
+Complexity & Wetted Channel Qualifying Island Count & Bankfull Width CV & 0.25\\
+Complexity & Bankfull Channel Qualifying Island Count & Bankfull Width CV & 0.25\\
+\addlinespace
+Complexity & Sinuosity & Wetted Depth SD & 0.24\\
+Complexity & Detrended Elevation SD & Wetted Depth SD & 0.23\\
+Complexity & Bankfull Width CV & Wetted Width To Depth Ratio Avg & -0.23\\
+Complexity & Bankfull Channel Qualifying Island Count & Bankfull Width To Depth Ratio CV & 0.23\\
+Complexity & Wetted Channel Qualifying Island Count & Bankfull Width To Depth Ratio CV & 0.22\\
+\addlinespace
+Complexity & Wetted Channel Braidedness & Bankfull Width CV & 0.21\\
+Complexity & Bankfull Channel Braidedness & Bankfull Width CV & 0.21\\
+Complexity & Wetted Depth SD & Wetted Width To Depth Ratio Avg & 0.21\\
+Complexity & Sinuosity & Wetted Width To Depth Ratio CV & 0.20\\
+Complexity & Bankfull Width To Depth Ratio CV & Wetted Width To Depth Ratio Avg & -0.20\\
+\addlinespace
+Complexity & Bankfull Channel Qualifying Island Count & Wetted Width CV & 0.20\\
+Complexity & Sinuosity & Bankfull Width To Depth Ratio CV & 0.20\\
+Complexity & Bankfull Channel Braidedness & Bankfull Width To Depth Ratio CV & 0.19\\
+Complexity & Wetted Channel Qualifying Island Count & Wetted Width CV & 0.19\\
+Complexity & Detrended Elevation SD & Bankfull Width To Depth Ratio CV & -0.19\\
+\addlinespace
+Complexity & Sinuosity & Thalweg Depth CV & 0.19\\
+Complexity & Wetted Channel Braidedness & Bankfull Width To Depth Ratio CV & 0.18\\
+Complexity & Bankfull Channel Braidedness & Wetted Width CV & 0.17\\
+Complexity & Wetted Channel Braidedness & Bankfull Width To Depth Ratio Avg & 0.17\\
+Complexity & Bankfull Channel Braidedness & Bankfull Width To Depth Ratio Avg & 0.16\\
+\addlinespace
+Complexity & Detrended Elevation SD & Bankfull Width CV & -0.16\\
+Complexity & Wetted Channel Braidedness & Wetted Width CV & 0.16\\
+Complexity & Sinuosity & Wetted Width CV & 0.14\\
+Complexity & Sinuosity & Bankfull Width CV & 0.14\\
+Complexity & Detrended Elevation SD & Wetted Width CV & -0.13\\
+\addlinespace
+Complexity & Detrended Elevation SD & Wetted Width To Depth Ratio CV & -0.13\\
+Complexity & Sinuosity & Wetted Width To Depth Ratio Avg & -0.12\\
+Complexity & Wetted Channel Qualifying Island Count & Bankfull Width To Depth Ratio Avg & 0.12\\
+Complexity & Bankfull Channel Qualifying Island Count & Wetted Width To Depth Ratio CV & 0.11\\
+Complexity & Bankfull Channel Qualifying Island Count & Bankfull Width To Depth Ratio Avg & 0.11\\
+\addlinespace
+Complexity & Detrended Elevation SD & Thalweg Depth CV & -0.11\\
+Complexity & Bankfull Channel Braidedness & Wetted Width To Depth Ratio CV & 0.10\\
+Complexity & Sinuosity & Detrended Elevation SD & -0.10\\
+Complexity & Bankfull Width To Depth Ratio Avg & Wetted Width CV & 0.10\\
+Complexity & Detrended Elevation SD & Bankfull Channel Qualifying Island Count & -0.09\\
+\addlinespace
+Complexity & Detrended Elevation SD & Wetted Channel Qualifying Island Count & -0.09\\
+Complexity & Wetted Channel Qualifying Island Count & Wetted Width To Depth Ratio CV & 0.08\\
+Complexity & Wetted Width CV & Wetted Width To Depth Ratio Avg & -0.08\\
+Complexity & Bankfull Channel Braidedness & Wetted Depth SD & 0.08\\
+Complexity & Wetted Depth SD & Wetted Width To Depth Ratio CV & 0.08\\
+\addlinespace
+Complexity & Detrended Elevation SD & Wetted Width To Depth Ratio Avg & 0.08\\
+Complexity & Detrended Elevation SD & Wetted Channel Braidedness & -0.07\\
+Complexity & Thalweg Depth CV & Bankfull Channel Qualifying Island Count & 0.07\\
+Complexity & Detrended Elevation SD & Bankfull Channel Braidedness & -0.07\\
+Complexity & Wetted Depth SD & Bankfull Width To Depth Ratio CV & 0.07\\
+\addlinespace
+Complexity & Bankfull Width To Depth Ratio CV & Bankfull Width To Depth Ratio Avg & 0.07\\
+Complexity & Bankfull Channel Braidedness & Wetted Width To Depth Ratio Avg & 0.07\\
+Complexity & Wetted Channel Braidedness & Wetted Depth SD & 0.06\\
+Complexity & Thalweg Depth CV & Wetted Depth SD & 0.06\\
+Complexity & Thalweg Depth CV & Bankfull Channel Braidedness & 0.06\\
+\addlinespace
+Complexity & Sinuosity & Bankfull Channel Qualifying Island Count & 0.06\\
+Complexity & Wetted Channel Braidedness & Wetted Width To Depth Ratio CV & 0.06\\
+Complexity & Sinuosity & Wetted Channel Qualifying Island Count & 0.06\\
+Complexity & Wetted Depth SD & Wetted Width CV & 0.05\\
+Complexity & Wetted Channel Braidedness & Wetted Width To Depth Ratio Avg & 0.04\\
+\addlinespace
+Complexity & Bankfull Width To Depth Ratio Avg & Wetted Width To Depth Ratio CV & 0.04\\
+Complexity & Thalweg Depth CV & Wetted Width To Depth Ratio Avg & -0.04\\
+Complexity & Sinuosity & Bankfull Channel Braidedness & 0.03\\
+Complexity & Thalweg Depth CV & Bankfull Width To Depth Ratio Avg & -0.03\\
+Complexity & Bankfull Channel Qualifying Island Count & Wetted Depth SD & 0.03\\
+\addlinespace
+Complexity & Wetted Width To Depth Ratio CV & Wetted Width To Depth Ratio Avg & 0.03\\
+Complexity & Thalweg Depth CV & Wetted Channel Qualifying Island Count & 0.02\\
+Complexity & Wetted Channel Qualifying Island Count & Wetted Width To Depth Ratio Avg & -0.02\\
+Complexity & Sinuosity & Bankfull Width To Depth Ratio Avg & 0.02\\
+Complexity & Wetted Depth SD & Bankfull Width CV & 0.02\\
+\addlinespace
+Complexity & Sinuosity & Wetted Channel Braidedness & 0.02\\
+Complexity & Bankfull Width CV & Bankfull Width To Depth Ratio Avg & 0.01\\
+Complexity & Detrended Elevation SD & Bankfull Width To Depth Ratio Avg & -0.01\\
+Complexity & Wetted Channel Qualifying Island Count & Wetted Depth SD & 0.01\\
+Complexity & Thalweg Depth CV & Wetted Channel Braidedness & 0.01\\
+\addlinespace
+Complexity & Bankfull Channel Qualifying Island Count & Wetted Width To Depth Ratio Avg & -0.01\\
+\hline
+Cover & Fish Cover: None & Fish Cover: Total & -0.94\\
+Cover & Percent Undercut by Length & Percent Undercut by Area & 0.80\\
+Cover & Fish Cover: Aquatic Vegetation & Fish Cover: Total & 0.70\\
+Cover & Fish Cover: Terrestrial Vegetation & Fish Cover: Total & 0.68\\
+\addlinespace
+Cover & Fish Cover: None & Fish Cover: Aquatic Vegetation & -0.67\\
+Cover & Fish Cover: Terrestrial Vegetation & Fish Cover: None & -0.65\\
+Cover & Fish Cover: LW & Fish Cover: Total & 0.54\\
+Cover & Fish Cover: LW & Fish Cover: None & -0.50\\
+Cover & Fish Cover: LW & Fish Cover: Terrestrial Vegetation & 0.35\\
+\addlinespace
+Cover & Fish Cover: Total & Percent Undercut by Area & 0.29\\
+Cover & Fish Cover: Aquatic Vegetation & Percent Undercut by Length & 0.28\\
+Cover & Fish Cover: None & Percent Undercut by Area & -0.27\\
+Cover & Fish Cover: Total & Percent Undercut by Length & 0.25\\
+Cover & Fish Cover: None & Percent Undercut by Length & -0.22\\
+\addlinespace
+Cover & Fish Cover: LW & Percent Undercut by Area & 0.20\\
+Cover & Fish Cover: Terrestrial Vegetation & Percent Undercut by Area & 0.20\\
+Cover & Fish Cover: Aquatic Vegetation & Percent Undercut by Area & 0.18\\
+Cover & Fish Cover: Artificial & Fish Cover: None & -0.12\\
+Cover & Fish Cover: Artificial & Fish Cover: Total & 0.11\\
+\addlinespace
+Cover & Fish Cover: LW & Percent Undercut by Length & 0.11\\
+Cover & Fish Cover: Artificial & Fish Cover: Aquatic Vegetation & 0.07\\
+Cover & Fish Cover: Terrestrial Vegetation & Percent Undercut by Length & 0.06\\
+Cover & Fish Cover: Artificial & Percent Undercut by Length & -0.05\\
+Cover & Fish Cover: Artificial & Percent Undercut by Area & -0.03\\
+\addlinespace
+Cover & Fish Cover: LW & Fish Cover: Aquatic Vegetation & -0.02\\
+Cover & Fish Cover: Terrestrial Vegetation & Fish Cover: Aquatic Vegetation & 0.02\\
+Cover & Fish Cover: LW & Fish Cover: Artificial & 0.02\\
+Cover & Fish Cover: Terrestrial Vegetation & Fish Cover: Artificial & -0.01\\
+\hline
+Riparian & Riparian Cover: Understory & RipCovUstoryNone & -1.00\\
+\addlinespace
+Riparian & Riparian Cover: No Canopy & Riparian Cover: Some Canopy & -1.00\\
+Riparian & Riparian Cover: Ground & RipCovGrndNone & -0.99\\
+Riparian & Riparian Cover: Understory & Riparian Cover: Woody & 0.85\\
+Riparian & Riparian Cover: Woody & RipCovUstoryNone & -0.85\\
+Riparian & Riparian Cover: Ground & Riparian Cover: Non-Woody & 0.83\\
+\addlinespace
+Riparian & Riparian Cover: Big Tree & Riparian Cover: No Canopy & -0.83\\
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Some Canopy & 0.83\\
+Riparian & Riparian Cover: Non-Woody & RipCovGrndNone & -0.83\\
+Riparian & Riparian Cover: Woody & Riparian Cover: No Canopy & -0.73\\
+Riparian & Riparian Cover: Woody & Riparian Cover: Some Canopy & 0.73\\
+\addlinespace
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Coniferous & 0.59\\
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Woody & 0.59\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: No Canopy & -0.52\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: Some Canopy & 0.52\\
+Riparian & Riparian Cover: Understory & Riparian Cover: No Canopy & -0.49\\
+\addlinespace
+Riparian & Riparian Cover: Understory & Riparian Cover: Some Canopy & 0.49\\
+Riparian & Riparian Cover: No Canopy & RipCovUstoryNone & 0.49\\
+Riparian & RipCovUstoryNone & Riparian Cover: Some Canopy & -0.49\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: Woody & 0.43\\
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Understory & 0.35\\
+\addlinespace
+Riparian & Riparian Cover: Big Tree & RipCovUstoryNone & -0.35\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: Understory & 0.24\\
+Riparian & Riparian Cover: Coniferous & RipCovUstoryNone & -0.24\\
+Riparian & Riparian Cover: Non-Woody & Riparian Cover: Woody & -0.21\\
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Non-Woody & -0.20\\
+\addlinespace
+Riparian & Riparian Cover: Non-Woody & Riparian Cover: No Canopy & 0.17\\
+Riparian & Riparian Cover: Non-Woody & Riparian Cover: Some Canopy & -0.17\\
+Riparian & RipCovUstoryNone & RipCovGrndNone & 0.17\\
+Riparian & Riparian Cover: Understory & RipCovGrndNone & -0.17\\
+Riparian & Riparian Cover: Ground & Riparian Cover: Understory & 0.16\\
+\addlinespace
+Riparian & Riparian Cover: Ground & RipCovUstoryNone & -0.16\\
+Riparian & Riparian Cover: Woody & RipCovGrndNone & -0.16\\
+Riparian & Riparian Cover: Ground & Riparian Cover: Woody & 0.15\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: Non-Woody & -0.13\\
+Riparian & Riparian Cover: Big Tree & Riparian Cover: Ground & -0.12\\
+\addlinespace
+Riparian & Riparian Cover: Big Tree & RipCovGrndNone & 0.11\\
+Riparian & Riparian Cover: Ground & Riparian Cover: No Canopy & 0.09\\
+Riparian & Riparian Cover: Ground & Riparian Cover: Some Canopy & -0.09\\
+Riparian & Riparian Cover: No Canopy & RipCovGrndNone & -0.08\\
+Riparian & RipCovGrndNone & Riparian Cover: Some Canopy & 0.08\\
+\addlinespace
+Riparian & Riparian Cover: Coniferous & RipCovGrndNone & -0.01\\
+Riparian & Riparian Cover: Non-Woody & Riparian Cover: Understory & -0.01\\
+Riparian & Riparian Cover: Non-Woody & RipCovUstoryNone & 0.01\\
+Riparian & Riparian Cover: Coniferous & Riparian Cover: Ground & 0.00\\
+\hline
+Side Channel & SCSm\_Freq & SCSm\_Ct & 0.90\\
+\addlinespace
+Side Channel & SCSm\_Freq & SC\_Area\_Pct & 0.49\\
+Side Channel & SCSm\_Ct & SC\_Area\_Pct & 0.49\\
+Side Channel & Wetted Side Channel Percent By Area & SCSm\_Ct & 0.44\\
+Side Channel & Wetted Side Channel Percent By Area & SCSm\_Freq & 0.40\\
+Side Channel & Wetted Side Channel Percent By Area & SC\_Area\_Pct & 0.30\\
+\hline
+\addlinespace
+Size & Wetted Width Integrated & Wetted Width Avg & 0.98\\
+Size & Bankfull Width Integrated & Bankfull Width Avg & 0.97\\
+Size & Bankfull Width Avg & Wetted Width Avg & 0.95\\
+Size & Wetted Width Integrated & Bankfull Width Avg & 0.95\\
+Size & Wetted Width Integrated & Bankfull Width Integrated & 0.92\\
+\addlinespace
+Size & Bankfull Width Integrated & Wetted Width Avg & 0.91\\
+Size & Bankfull Depth Avg & DpthThlwg\_Avg & 0.85\\
+Size & Bankfull Depth Max & DpthThlwg\_Avg & 0.84\\
+Size & Bankfull Width Avg & Bankfull Depth Avg & 0.83\\
+Size & Wetted Width Avg & Bankfull Depth Avg & 0.82\\
+\addlinespace
+Size & Wetted Width Avg & Discharge & 0.82\\
+Size & Bankfull Depth Max & Bankfull Depth Avg & 0.82\\
+Size & Bankfull Depth Max & Residual Pool Depth & 0.81\\
+Size & Wetted Width Integrated & Discharge & 0.79\\
+Size & Bankfull Width Integrated & Bankfull Depth Avg & 0.79\\
+\addlinespace
+Size & Wetted Width Integrated & Bankfull Depth Avg & 0.79\\
+Size & Wetted Width Avg & DpthThlwg\_Avg & 0.79\\
+Size & Wetted Width Integrated & DpthThlwg\_Avg & 0.78\\
+Size & Bankfull Width Avg & DpthThlwg\_Avg & 0.77\\
+Size & Bankfull Width Avg & Discharge & 0.77\\
+\addlinespace
+Size & DpthThlwg\_Avg & Residual Pool Depth & 0.76\\
+Size & Bankfull Width Integrated & DpthThlwg\_Avg & 0.75\\
+Size & Bankfull Width Integrated & Discharge & 0.74\\
+Size & Bankfull Width Avg & Bankfull Depth Max & 0.74\\
+Size & DpthThlwg\_Avg & Discharge & 0.74\\
+\addlinespace
+Size & Drainage Area (Flowline) & Wetted Width Avg & 0.73\\
+Size & Bankfull Width Integrated & Bankfull Depth Max & 0.73\\
+Size & Drainage Area (Flowline) & Wetted Width Integrated & 0.72\\
+Size & Drainage Area (Flowline) & Bankfull Width Avg & 0.72\\
+Size & Drainage Area (Flowline) & Discharge & 0.70\\
+\addlinespace
+Size & Wetted Width Avg & Bankfull Depth Max & 0.70\\
+Size & Bankfull Width Avg & Residual Pool Depth & 0.69\\
+Size & Wetted Width Integrated & Bankfull Depth Max & 0.69\\
+Size & Drainage Area (Flowline) & Bankfull Width Integrated & 0.68\\
+Size & Bankfull Depth Avg & Residual Pool Depth & 0.68\\
+\addlinespace
+Size & Bankfull Depth Avg & Discharge & 0.68\\
+Size & Wetted Width Avg & Residual Pool Depth & 0.67\\
+Size & Wetted Width Integrated & Residual Pool Depth & 0.67\\
+Size & Bankfull Width Integrated & Residual Pool Depth & 0.67\\
+Size & Residual Pool Depth & Discharge & 0.60\\
+\addlinespace
+Size & Bankfull Depth Max & Discharge & 0.59\\
+Size & Drainage Area (Flowline) & Bankfull Depth Avg & 0.56\\
+Size & Drainage Area (Flowline) & Residual Pool Depth & 0.54\\
+Size & Drainage Area (Flowline) & DpthThlwg\_Avg & 0.52\\
+Size & Drainage Area (Flowline) & Bankfull Depth Max & 0.46\\
+\addlinespace
+Size & Gradient & Bankfull Width Avg & -0.44\\
+Size & Gradient & Bankfull Width Integrated & -0.43\\
+Size & Gradient & Wetted Width Avg & -0.42\\
+Size & Gradient & Wetted Width Integrated & -0.42\\
+Size & Gradient & DpthThlwg\_Avg & -0.39\\
+\addlinespace
+Size & Gradient & Residual Pool Depth & -0.33\\
+Size & Gradient & Bankfull Depth Avg & -0.33\\
+Size & Drainage Area (Flowline) & Gradient & -0.31\\
+Size & Gradient & Bankfull Depth Max & -0.31\\
+Size & Gradient & Discharge & -0.30\\
+\addlinespace
+Size & Precipitation & Drainage Area (Flowline) & -0.15\\
+Size & Precipitation & Bankfull Depth Avg & 0.11\\
+Size & Precipitation & Bankfull Depth Max & 0.10\\
+Size & Precipitation & DpthThlwg\_Avg & 0.09\\
+Size & Precipitation & Discharge & -0.05\\
+\addlinespace
+Size & Precipitation & Gradient & 0.03\\
+Size & Precipitation & Wetted Width Integrated & -0.02\\
+Size & Precipitation & Bankfull Width Integrated & -0.02\\
+Size & Precipitation & Wetted Width Avg & -0.02\\
+Size & Precipitation & Bankfull Width Avg & -0.01\\
+\addlinespace
+Size & Precipitation & Residual Pool Depth & -0.01\\
+\hline
+Substrate & Substrate < 2mm & Substrate < 6mm & 0.95\\
+Substrate & Substrate: D50 & Substrate: D84 & 0.87\\
+Substrate & Substrate: Embeddedness Avg & Substrate: Embeddedness SD & 0.86\\
+Substrate & Substrate: D84 & Substrate Est: Boulders & 0.80\\
+\addlinespace
+Substrate & Substrate: D50 & Substrate Est: Boulders & 0.71\\
+Substrate & Substrate < 2mm & Substrate Est: Sand and Fines & 0.68\\
+Substrate & Substrate < 6mm & Substrate Est: Sand and Fines & 0.67\\
+Substrate & Substrate Est: Sand and Fines & Substrate Est: Cobbles & -0.67\\
+Substrate & Substrate: D16 & Substrate: D50 & 0.61\\
+\addlinespace
+Substrate & Substrate Est: Coarse and Fine Gravel & Substrate Est: Boulders & -0.59\\
+Substrate & Substrate: D84 & Substrate Est: Coarse and Fine Gravel & -0.52\\
+Substrate & Substrate < 6mm & Substrate Est: Cobbles & -0.46\\
+Substrate & Substrate: D50 & Substrate Est: Sand and Fines & -0.45\\
+Substrate & Substrate: D16 & Substrate Est: Sand and Fines & -0.43\\
+\addlinespace
+Substrate & Substrate < 2mm & Substrate Est: Cobbles & -0.43\\
+Substrate & Substrate: D50 & Substrate Est: Coarse and Fine Gravel & -0.43\\
+Substrate & Substrate: D16 & Substrate Est: Cobbles & 0.42\\
+Substrate & Substrate: Embeddedness Avg & Substrate < 2mm & 0.42\\
+Substrate & Substrate: D16 & Substrate < 6mm & -0.42\\
+\addlinespace
+Substrate & Substrate: Embeddedness Avg & Substrate Est: Sand and Fines & 0.40\\
+Substrate & Substrate: D50 & Substrate Est: Cobbles & 0.40\\
+Substrate & Substrate: D84 & Substrate Est: Sand and Fines & -0.39\\
+Substrate & Substrate: D16 & Substrate < 2mm & -0.39\\
+Substrate & Substrate: D50 & Substrate < 6mm & -0.38\\
+\addlinespace
+Substrate & Substrate: Embeddedness Avg & Substrate < 6mm & 0.38\\
+Substrate & Substrate: D16 & Substrate: D84 & 0.38\\
+Substrate & Substrate Est: Sand and Fines & Substrate Est: Boulders & -0.36\\
+Substrate & Substrate: D50 & Substrate < 2mm & -0.35\\
+Substrate & Substrate: Embeddedness SD & Substrate < 2mm & 0.34\\
+\addlinespace
+Substrate & Substrate: D84 & Substrate Est: Cobbles & 0.33\\
+Substrate & Substrate: Embeddedness SD & Substrate Est: Sand and Fines & 0.31\\
+Substrate & Substrate: Embeddedness SD & Substrate < 6mm & 0.31\\
+Substrate & Substrate: Embeddedness Avg & Substrate: D16 & -0.30\\
+Substrate & Substrate Est: Coarse and Fine Gravel & Substrate Est: Cobbles & -0.30\\
+\addlinespace
+Substrate & Substrate: D16 & Substrate Est: Boulders & 0.29\\
+Substrate & Substrate: D84 & Substrate < 6mm & -0.28\\
+Substrate & Substrate: Embeddedness SD & Substrate: D16 & -0.27\\
+Substrate & Substrate: Embeddedness Avg & Substrate Est: Cobbles & -0.25\\
+Substrate & Substrate: D84 & Substrate < 2mm & -0.25\\
+\addlinespace
+Substrate & Substrate Est: Coarse and Fine Gravel & Substrate Est: Sand and Fines & -0.23\\
+Substrate & Substrate < 2mm & Substrate Est: Coarse and Fine Gravel & -0.22\\
+Substrate & Substrate Est: Boulders & Substrate Est: Cobbles & 0.22\\
+Substrate & Substrate < 6mm & Substrate Est: Boulders & -0.19\\
+Substrate & Substrate: Embeddedness SD & Substrate Est: Cobbles & -0.19\\
+\addlinespace
+Substrate & Substrate < 2mm & Substrate Est: Boulders & -0.19\\
+Substrate & Substrate: Embeddedness Avg & Substrate Est: Coarse and Fine Gravel & -0.18\\
+Substrate & Substrate < 6mm & Substrate Est: Coarse and Fine Gravel & -0.18\\
+Substrate & Substrate: Embeddedness Avg & Substrate: D50 & -0.17\\
+Substrate & Substrate: Embeddedness SD & Substrate Est: Coarse and Fine Gravel & -0.15\\
+\addlinespace
+Substrate & Substrate: Embeddedness SD & Substrate: D50 & -0.13\\
+Substrate & Substrate: D16 & Substrate Est: Coarse and Fine Gravel & -0.12\\
+Substrate & Substrate: Embeddedness Avg & Substrate: D84 & -0.08\\
+Substrate & Substrate: Embeddedness SD & Substrate: D84 & -0.05\\
+Substrate & Substrate: Embeddedness Avg & Substrate Est: Boulders & -0.03\\
+\addlinespace
+Substrate & Substrate: Embeddedness SD & Substrate Est: Boulders & -0.02\\
+\hline
+Temperature & Avg. August Temperature & August Temperature & 0.98\\
+Temperature & Elev\_M & Avg. August Temperature & -0.61\\
+Temperature & Elev\_M & August Temperature & -0.61\\
+Temperature & Solar Access: Summer Avg & August Temperature & 0.19\\
+\addlinespace
+Temperature & Solar Access: Summer Avg & Avg. August Temperature & 0.13\\
+Temperature & Elev\_M & Solar Access: Summer Avg & 0.12\\
+\hline
+Water Quality & Conductivity & Alkalinity & 0.78\\
+Water Quality & Alkalinity & Drift Biomass & 0.16\\
+Water Quality & Conductivity & Drift Biomass & 0.16\\
+\hline
+\addlinespace
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Volume: Bankfull Slow Water & 0.91\\
+Wood & Large Wood Frequency: Wetted & Large Wood Frequency: Bankfull & 0.91\\
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Bankfull & 0.90\\
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Wetted Slow Water & 0.88\\
+Wood & Large Wood Volume: Bankfull & Large Wood Volume: Bankfull Slow Water & 0.84\\
+\addlinespace
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Bankfull Slow Water & 0.81\\
+Wood & Large Wood Volume: Wetted Fast NonTurbulent & Large Wood Volume: Bankfull Fast NonTurbulent & 0.79\\
+Wood & Large Wood Volume: Bankfull & Large Wood Volume: Wetted Slow Water & 0.78\\
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Wetted Fast NonTurbulent & 0.60\\
+Wood & Large Wood Volume: Bankfull & Large Wood Volume: Bankfull Fast NonTurbulent & 0.56\\
+\addlinespace
+Wood & Large Wood Volume: Bankfull & Large Wood Frequency: Bankfull & 0.56\\
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Wetted Fast Turbulent & 0.53\\
+Wood & Large Wood Volume: Wetted & Large Wood Volume: Bankfull Fast NonTurbulent & 0.52\\
+Wood & Large Wood Volume: Wetted & Large Wood Frequency: Wetted & 0.51\\
+Wood & Large Wood Volume: Wetted & Large Wood Frequency: Bankfull & 0.51\\
+\addlinespace
+Wood & Large Wood Volume: Bankfull & Large Wood Volume: Wetted Fast NonTurbulent & 0.50\\
+Wood & Large Wood Volume: Bankfull & Large Wood Volume: Wetted Fast Turbulent & 0.50\\
+Wood & Large Wood Volume: Bankfull & Large Wood Frequency: Wetted & 0.45\\
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Volume: Wetted Fast NonTurbulent & 0.45\\
+Wood & Large Wood Volume: Bankfull Slow Water & Large Wood Frequency: Bankfull & 0.43\\
+\addlinespace
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Frequency: Wetted & 0.42\\
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Volume: Bankfull Fast NonTurbulent & 0.40\\
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Frequency: Bankfull & 0.40\\
+Wood & Large Wood Volume: Bankfull Slow Water & Large Wood Volume: Wetted Fast NonTurbulent & 0.39\\
+Wood & Large Wood Volume: Bankfull Slow Water & Large Wood Frequency: Wetted & 0.39\\
+\addlinespace
+Wood & Large Wood Volume: Bankfull Slow Water & Large Wood Volume: Bankfull Fast NonTurbulent & 0.38\\
+Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Frequency: Bankfull & 0.37\\
+Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Frequency: Wetted & 0.35\\
+Wood & Large Wood Frequency: Bankfull & Large Wood Volume: Bankfull Fast NonTurbulent & 0.27\\
+Wood & Large Wood Volume: Wetted Fast NonTurbulent & Large Wood Frequency: Wetted & 0.24\\
+\addlinespace
+Wood & Large Wood Frequency: Wetted & Large Wood Volume: Bankfull Fast NonTurbulent & 0.22\\
+Wood & Large Wood Volume: Wetted Fast NonTurbulent & Large Wood Frequency: Bankfull & 0.22\\
+Wood & Large Wood Volume: Wetted Slow Water & Large Wood Volume: Wetted Fast Turbulent & 0.15\\
+Wood & Large Wood Volume: Bankfull Slow Water & Large Wood Volume: Wetted Fast Turbulent & 0.14\\
+Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Volume: Wetted Fast NonTurbulent & 0.12\\
+\addlinespace
+Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Volume: Bankfull Fast NonTurbulent & 0.12\\*
+\end{longtable}
+
+\newpage
+
+\hypertarget{figures}{%
+\section{Figures}\label{figures}}
+
+\begin{figure}
+\centering
+\includegraphics{../../figures/appendix/mine-facet-fig-1.pdf}
+\caption{\label{fig:mine-facet-fig}Barplots of MIC statistics, faceted by habitat category.}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{../../figures/appendix/mine-all-fig-1.pdf}
+\caption{\label{fig:mine-all-fig}Barplot of MIC statistics, colored by habitat category.}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{../../figures/appendix/selected-corr-1.pdf}
+\caption{\label{fig:selected-corr}Correlation plot of habitat metrics used in the QRF model.}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{../../figures/appendix/high-cor-mets-1.pdf}
+\caption{\label{fig:high-cor-mets}Pairs plot of habitat metrics used in QRF model with a correlation coefficient greater than 0.5 or less than -0.5.}
+\end{figure}
+
+\end{document}

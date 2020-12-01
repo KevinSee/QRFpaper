@@ -1,27 +1,27 @@
 ---
-title: "Appendix S1"
-subtitle: "Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models"
+title: Appendix S1 - _Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models_
+subtitle: "Ecospheres"
 author:
-  - Kevin E. See:
-      email: Kevin.See@merck.com
-      institute: [biomark]
-      correspondence: true
-  - Michael W. Ackerman:
-      email: Mike.Ackerman@merck.com
-      institute: [biomark]
-      correspondence: false
-  - Richard A. Carmichael:
-      email: Richard.Carmichael@merck.com
-      institute: [biomark]
-      correspondence: false
-  - Sarah L. Hoffmann:
-      email: Sarah.Hoffmann@merck.com
-      institute: [biomark]
-      correspondence: false
-  - Chris Beasley:
-      email: Chris.Beasley@merck.com
-      institute: [biomark]
-      correspondence: false
+- Kevin E. See:
+    email: Kevin.See@merck.com
+    institute: [biomark]
+    correspondence: true
+- Michael W. Ackerman:
+    email: Mike.Ackerman@merck.com
+    institute: [biomark]
+    correspondence: false
+- Richard A. Carmichael:
+    email: Richard.Carmichael@merck.com
+    institute: [biomark]
+    correspondence: false
+- Sarah L. Hoffmann:
+    email: Sarah.Hoffmann@merck.com
+    institute: [biomark]
+    correspondence: false
+- Chris Beasley:
+    email: Chris.Beasley@merck.com
+    institute: [biomark]
+    correspondence: false
 institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
@@ -34,6 +34,7 @@ output:
       number_sections: FALSE
       geometry: margin=1in
       latex_engine: "xelatex"
+      keep_tex: true
       pandoc_args:
       - --lua-filter=../../templates/scholarly-metadata.lua
       - --lua-filter=../../templates/author-info-blocks2.lua
