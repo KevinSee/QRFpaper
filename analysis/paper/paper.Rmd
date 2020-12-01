@@ -391,7 +391,9 @@ To summarize capacity at larger scales, the mean linear capacity (e.g., parr/m) 
 
 Spawner-recruit data from several watersheds within the interior Columbia River basin were compiled to validate the extrapolated QRF estimates of Chinook salmon parr capacity. Some watersheds had direct estimates of parr, while some had estimates of pre-smolts and smolts (i.e., fall and spring emigrants) from rotary screw traps. For the latter, estimates of parr were calculated using estimates of over-winter survival to back-calculate parr from smolt estimates, and then adding that to pre-smolt estimates. A series of spawner-recruit functions were then fit to this data including Beverton-Holt, Ricker, and hockey stick [@Froese2008], using the *FSA* package [@R-FSA] in R. Estimates of capacity from each of these spawner-recruit curves were compared with QRF estimates of capacity for the same regions.
 
-All code and data for the analyses presented here can be found in a GitHub repository ([(https://github.com/KevinSee/QRFpaper)](https://github.com/KevinSee/QRFpaper)).
+All code and data for the analyses presented here can be found in a GitHub repository ([(https://doi.org/10.5281/zenodo.4300942)](https://doi.org/10.5281/zenodo.4300942)).
+
+<!-- ([(https://github.com/KevinSee/QRFpaper)](https://github.com/KevinSee/QRFpaper)) -->
 
 # Results
 
