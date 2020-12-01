@@ -19,6 +19,8 @@ Journal <- "Ecosphere"
 
 # QRFpaper
 
+[![DOI](https://zenodo.org/badge/225946308.svg)](https://zenodo.org/badge/latestdoi/225946308)
+
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/KevinSee/QRFpaper/master?urlpath=rstudio)
 
 This repository contains the data and code for our paper:
