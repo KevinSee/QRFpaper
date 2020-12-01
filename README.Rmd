@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 Title <- "Estimating Life-Stage Specific Habitat Capacity for Anadromous Salmonids using Quantile Random Forest Models"
 Authors <- "See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah Hoffman, and Chris Beasley"
 yr <- 2020
-Journal <- "Ecological Modelling"
+Journal <- "Ecosphere"
 ```
 
 # QRFpaper
