@@ -25,15 +25,6 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
-    bookdown::html_document2:
-      fig_caption: yes
-      number_sections: false
-      toc: no
-      fig_width: 7
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       number_sections: false
@@ -47,6 +38,15 @@ output:
       - --lua-filter=../templates/pagebreak.lua
       includes:
         in_header: ../templates/header_manuscript.tex
+    bookdown::html_document2:
+      fig_caption: yes
+      number_sections: false
+      toc: no
+      fig_width: 7
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
     bookdown::word_document2:
       fig_caption: yes
       # reference_docx: "../templates/EcologicalApplicationsTemplate.docx" # Insert path for the DOCX file
@@ -116,10 +116,6 @@ doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
 if(doc.type == 'docx') {
   options(knitr.table.format = "pandoc")
 }
-
-# if(doc.type %in% c("docx", "html")) {
-#   theme_set(theme_pubr(base_family = "Times New Roman"))
-# }
 
 ```
 
@@ -449,7 +445,7 @@ If a species' carrying capacity is defined or constrained, at least in part, by 
 
 # Acknowledgements
 
-Model development efforts have been funded by the Bonneville Power Administration through projects 2003-017-00 and 2011-006-00 and by the Bureau of Reclamation and Idaho Governor's Office of Species Conservation through contract BOR002 16. Fish sampling work in the Lemhi River was also funded through the Idaho Governor's Office of Species Conservation through the Pacific Coast Salmon Recovery Fund. Special thanks to staff from the following agencies for providing data to calculate Chinook salmon parr abundance and density estimates: Columbia River Inter-Tribal Fish Commission, Oregon Department of Fish and Wildlife, and U.S. Fish and Wildlife Service. The models in this study were improved by conversations with Eric Buhle.
+Model development efforts have been funded by the Bonneville Power Administration through projects 2003-017-00 and 2011-006-00 and by the Bureau of Reclamation and Idaho Governor's Office of Species Conservation through contract BOR002 16. Fish sampling work in the Lemhi River was also funded through the Idaho Governor's Office of Species Conservation through the Pacific Coast Salmon Recovery Fund. Special thanks to staff from the following agencies for providing data to calculate Chinook salmon parr abundance and density estimates: Columbia River Inter-Tribal Fish Commission, Oregon Department of Fish and Wildlife, and U.S. Fish and Wildlife Service. The models in this study were improved by conversations with Chris Jordan and Eric Buhle.
 
 <!-- The following line inserts a page break  -->
 \newpage
@@ -656,7 +652,7 @@ spawn_rec_params %>%
 
 <div id="figures"></div>
 
-```{r wtsd-map, out.width = "90%", fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
+```{r wtsd-map, out.width = "85%", fig.cap = "Watersheds with CHaMP habitat data. Watersheds in black also contain paired fish data. Watershed names are: 1 - Entiat, 2 - John Day, 3 - Lemhi, 4 - Methow, 5 - Minam, 6 - Secesh, 7 - South Fork Salmon, 8 - Tucannon, 9 - Upper Grande Ronde, 10 - Wenatchee, 11 - Yankee Fork."}
 knitr::include_graphics('../figures/ChampWtds.png')
 ```
 
