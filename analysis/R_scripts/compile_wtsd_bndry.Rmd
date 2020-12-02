@@ -22,7 +22,7 @@ library(ggrepel)
 library(ggspatial)
 
 # set default theme for ggplot
-theme_set(theme_bw())
+theme_set(theme_bw(base_family = "Helvetica"))
 # setwd('analysis/R_scripts')
 ```
 
@@ -136,8 +136,8 @@ river_lines = QRFcapacity::get_flowlines(stream_order = 6,
                                          champ_wtsds %>%
                                            st_union() %>%
                                            st_make_grid(n = 1)) %>%
-            filter(!grepl('^1701', reachcode),
-                   !grepl('^171', reachcode))
+            filter(!grepl('^1701', REACHCODE),
+                   !grepl('^171', REACHCODE))
 
 # river_lines %>%
 #   filter(!gnis_name %in% c('Deschutes River',
@@ -166,25 +166,13 @@ wtsd_map = ggplot(data = champ_wtsds) +
   theme(axis.title = element_blank())
 
 # save a couple versions
-ggsave('../figures/ChampWtds.svg',
+for(file_ext in c("png", 'pdf', 'tiff')) {
+  ggsave(paste0('../figures/ChampWtds.', file_ext),
        wtsd_map,
-       dpi = 600,
+       dpi = 400,
        height = 6,
        width = 6)
-ggsave('../figures/ChampWtds.png',
-       wtsd_map,
-       dpi = 600,
-       height = 6,
-       width = 6)
-ggsave('../figures/ChampWtds.tiff',
-       wtsd_map,
-       dpi = 600,
-       height = 6,
-       width = 6)
-ggsave('../figures/ChampWtds.jpeg',
-       wtsd_map,
-       dpi = 600,
-       height = 6,
-       width = 6)
+}
+
 ```
 
