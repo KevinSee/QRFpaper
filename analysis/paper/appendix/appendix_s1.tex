@@ -110,12 +110,8 @@
 }
 \makeatother
 \subtitle{Ecospheres}
-\author{Kevin E. See\textsuperscript{1,*}, 
-    \and Michael W. Ackerman\textsuperscript{1}, 
-    \and Richard A. Carmichael\textsuperscript{1},
-    \and Sarah L. Hoffmann\textsuperscript{1}, 
-    \and Chris Beasley\textsuperscript{1}}
-\date{December 01, 2020}
+\author{Kevin E. See\textsuperscript{1,*}, Michael W. Ackerman\textsuperscript{1}, Richard A. Carmichael\textsuperscript{1}, Sarah L. Hoffmann\textsuperscript{1}, and Chris Beasley\textsuperscript{1}}
+\date{December 02, 2020}
 
 \begin{document}
 \maketitle
@@ -158,6 +154,8 @@ Rosgen, D., A. Taillacq, B. Rosgen, and D. Geenen. 2018. A technical review of t
 \hypertarget{tables}{%
 \section{Tables}\label{tables}}
 
+\begingroup\fontsize{10}{12}\selectfont
+
 \begin{longtable}[t]{l>{\raggedright\arraybackslash}p{2in}>{\raggedright\arraybackslash}p{1in}>{\raggedleft\arraybackslash}p{0.5in}>{\raggedleft\arraybackslash}p{0.5in}>{\raggedleft\arraybackslash}p{0.5in}}
 \caption{\label{tab:mic-tab}MIC statistic for top metrics within each habitat category, sorted by category and MIC value. The percent of records for which each habitat metric measurement was missing or zero is also shown. Metrics selected for the QRF model are in bold.}\\
 \toprule
@@ -173,17 +171,17 @@ Category & Name & Abbrv & MIC & Percent Missing & Percent 0-value\\
 \endfoot
 \bottomrule
 \endlastfoot
-\textbf{ChannelUnit} & \textbf{Channel Unit Frequency} & \textbf{CU\_Freq} & \textbf{0.241} & \textbf{0.021} & \textbf{0.021}\\
-ChannelUnit & Fast Turbulent Frequency & FstTurb\_Freq & 0.230 & 0.021 & 0.082\\
-ChannelUnit & Fast NonTurbulent Frequency & FstNT\_Freq & 0.209 & 0.021 & 0.308\\
-ChannelUnit & Slow Water Frequency & SlowWater\_Freq & 0.208 & 0.021 & 0.073\\
-ChannelUnit & Fast Turbulent Percent & FstTurb\_Pct & 0.195 & 0.021 & 0.082\\
+\textbf{Channel Unit} & \textbf{Channel Unit Frequency} & \textbf{CU\_Freq} & \textbf{0.241} & \textbf{0.021} & \textbf{0.021}\\
+Channel Unit & Fast Turbulent Frequency & FstTurb\_Freq & 0.230 & 0.021 & 0.082\\
+Channel Unit & Fast NonTurbulent Frequency & FstNT\_Freq & 0.209 & 0.021 & 0.308\\
+Channel Unit & Slow Water Frequency & SlowWater\_Freq & 0.208 & 0.021 & 0.073\\
+Channel Unit & Fast Turbulent Percent & FstTurb\_Pct & 0.195 & 0.021 & 0.082\\
 \addlinespace
-ChannelUnit & Channel Unit Count & CU\_Ct & 0.189 & 0.021 & 0.021\\
-ChannelUnit & Fast Turbulent Count & FstTurb\_Ct & 0.178 & 0.021 & 0.082\\
-ChannelUnit & Slow Water Percent & SlowWater\_Pct & 0.177 & 0.021 & 0.073\\
-ChannelUnit & Fast NonTurbulent Percent & FstNT\_Pct & 0.169 & 0.021 & 0.308\\
-ChannelUnit & Fast NonTurbulent Count & FstNT\_Ct & 0.166 & 0.021 & 0.308\\
+Channel Unit & Channel Unit Count & CU\_Ct & 0.189 & 0.021 & 0.021\\
+Channel Unit & Fast Turbulent Count & FstTurb\_Ct & 0.178 & 0.021 & 0.082\\
+Channel Unit & Slow Water Percent & SlowWater\_Pct & 0.177 & 0.021 & 0.073\\
+Channel Unit & Fast NonTurbulent Percent & FstNT\_Pct & 0.169 & 0.021 & 0.308\\
+Channel Unit & Fast NonTurbulent Count & FstNT\_Ct & 0.166 & 0.021 & 0.308\\
 \addlinespace
 \textbf{Complexity} & \textbf{Wetted Width To Depth Ratio Avg} & \textbf{WetWDRat\_Avg} & \textbf{0.247} & \textbf{0.003} & \textbf{0.003}\\
 Complexity & Bankfull Width To Depth Ratio Avg & BfWDRat\_Avg & 0.245 & 0.003 & 0.003\\
@@ -218,13 +216,13 @@ Riparian & RipCovGrndNone & RipCovGrndNone & 0.170 & 0.000 & 0.003\\
 Riparian & Riparian Cover: Woody & RipCovWood & 0.168 & 0.000 & 0.000\\
 Riparian & Riparian Cover: Non-Woody & RipCovNonWood & 0.166 & 0.000 & 0.000\\
 Riparian & Riparian Cover: Coniferous & RipCovConif & 0.164 & 0.009 & 0.192\\
-SideChannel & Bankfull Side Channel Width & BfSCWdth & 0.223 & 0.796 & 0.796\\
-SideChannel & Wetted Side Channel Width & WetSCWdth & 0.213 & 0.832 & 0.832\\
+Side Channel & Bankfull Side Channel Width & BfSCWdth & 0.223 & 0.796 & 0.796\\
+Side Channel & Wetted Side Channel Width & WetSCWdth & 0.213 & 0.832 & 0.832\\
 \addlinespace
-SideChannel & Wetted Side Channel Percent By Area & WetSC\_Pct & 0.209 & 0.021 & 0.820\\
-SideChannel & SCSm\_Freq & SCSm\_Freq & 0.153 & 0.021 & 0.921\\
-SideChannel & SCSm\_Ct & SCSm\_Ct & 0.153 & 0.021 & 0.921\\
-SideChannel & SC\_Area\_Pct & SC\_Area\_Pct & 0.153 & 0.021 & 0.921\\
+Side Channel & Wetted Side Channel Percent By Area & WetSC\_Pct & 0.209 & 0.021 & 0.820\\
+Side Channel & SCSm\_Freq & SCSm\_Freq & 0.153 & 0.021 & 0.921\\
+Side Channel & SCSm\_Ct & SCSm\_Ct & 0.153 & 0.021 & 0.921\\
+Side Channel & SC\_Area\_Pct & SC\_Area\_Pct & 0.153 & 0.021 & 0.921\\
 Size & Mean Annual Flow & MeanU & 0.346 & 0.476 & 0.476\\
 \addlinespace
 \textbf{Size} & \textbf{Wetted Width Integrated} & \textbf{WetWdth\_Int} & \textbf{0.332} & \textbf{0.003} & \textbf{0.003}\\
@@ -269,6 +267,9 @@ Wood & Large Wood Volume: Bankfull Fast NonTurbulent & LWVol\_BfFstNT & 0.175 & 
 Wood & Large Wood Volume: Wetted & LWVol\_Wet & 0.166 & 0.003 & 0.125\\
 Wood & Large Wood Volume: Wetted Fast NonTurbulent & LWVol\_WetFstNT & 0.159 & 0.003 & 0.595\\*
 \end{longtable}
+\endgroup{}
+
+\begingroup\fontsize{10}{12}\selectfont
 
 \begin{longtable}[t]{>{\raggedright\arraybackslash}p{1in}>{\raggedright\arraybackslash}p{2in}>{\raggedright\arraybackslash}p{2in}r}
 \caption{\label{tab:corr-tab}Pearson correlation coefficient between each variable within a habitat category.}\\
@@ -764,6 +765,7 @@ Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Volume: Wetted Fast
 \addlinespace
 Wood & Large Wood Volume: Wetted Fast Turbulent & Large Wood Volume: Bankfull Fast NonTurbulent & 0.12\\*
 \end{longtable}
+\endgroup{}
 
 \newpage
 

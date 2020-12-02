@@ -40,7 +40,7 @@
 \hypersetup{
   pdftitle={Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models},
   pdfauthor={Kevin E. See1,, Michael W. Ackerman1, Richard A. Carmichael1, Sarah L. Hoffmann1, and Chris Beasley1},
-  pdfkeywords={carrying capacity; quantile regression; random forests; Chinook; quantile random forest},
+  pdfkeywords={carrying capacity; Chinook salmon; quantile random forest; quantile regression; random forests},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
@@ -98,7 +98,7 @@
 
 \title{Estimating Carrying Capacity for Juvenile Salmon using Quantile Random Forest Models}
 \author{Kevin E. See\textsuperscript{1,*}, Michael W. Ackerman\textsuperscript{1}, Richard A. Carmichael\textsuperscript{1}, Sarah L. Hoffmann\textsuperscript{1}, and Chris Beasley\textsuperscript{1}}
-\date{December 01, 2020}
+\date{December 02, 2020}
 
 \begin{document}
 \maketitle
@@ -117,7 +117,7 @@ The decline of anadromous Pacific salmonids (\emph{Oncorhynchus spp.}) across th
 
 When it comes to estimating carrying capacity, spawner-recruit models are the gold standard (Moussalli and Hilborn 1986, Myers et al. 1999). However, such models require a long time-series of accurate estimates of abundance for adults and juveniles, with variation in the number of adults. Such data are unavailable in most watersheds (Cramer and Ackerman 2009), and they do not necessarily allow one to link capacity to habitat characteristics, except perhaps at the watershed scale. Bioenergetics approaches, such as the net rate of energy intake (NREI) have been applied to salmonids to estimate capacity on the 200 - 600 m reach scale (Wall et al. 2016). However, there are some potential issues with how the food supply (i.e.~invertebrate drift) is measured with these methods that could lead to biases in capacity estimates (Dodrill and Yackulic 2016) as well as difficulty in properly constraining drift depletion and inter-species competition, and computational and spatial limitation of this modelling approach (Wall et al. 2016, Carmichael et al. 2020). In addition, those authors did not take the step of scaling the capacity predictions at the reach scale to entire watersheds. In contrast, Sweka and Mackey (2010) estimated carrying capacity of Atlantic salmon (\emph{Salmo salar}) parr at the watershed scale, using a quantile regression approach, but the only habitat covariate they included was cumulative drainage area. Estimates of salmonid carrying capacity that leverage fish-habitat relationships are lacking at the watershed scale in the Pacific Northwest.
 
-Most studies that have investigated fish-habitat relationships focus on predicting a species' distribution (presence / absence) or the average abundance or density: neither of which can be easily manipulated to predict carrying capacity. Further, many of these studies focus on only one or two measures of habitat. Fausch et al. (1988) conducted a thorough review of attempts to predict the abundance of fish from measurable habitat covariates from 1950 to 1985 and found that the vast majority of multiple linear regression models failed to detect a significant fish-habitat signal. Since that review, there has been progress in identifying some fish-habitat relationships for several salmonid species. Nickelson et al. (1992) demonstrated that juvenile coho salmon (\emph{O. kisutch}) were found in higher densities within pool habitat on the Oregon coast. Similarly, pool and pond densities were good predictors of coho smolt densities in western Washington (Sharma and Hilborn 2001). Bryant and Woodsmith (2009) found that juvenile coho abundance was positively related to large wood at the reach scale; however their results demonstrated a negative relationship between abundance and the number of pools. Braun and Reynolds (2011) similarly found positive associations between spawner densities of sockeye salmon (\emph{O. nerka}) in the Fraser River and large wood, in addition to positive relationships to percent undercuts and percent pools. Densities of adult spawning coho were also higher in forested areas compared to urban or agricultural areas in the Snohomish River watershed (Pess et al. 2002). Mossop and Bradford (2006) examined juvenile Chinook salmon (\emph{O. tshawytscha}) in the Yukon River and found positive correlations between the log of fish density and several metrics related to residual pool dimensions and large woody debris abundance as well as a negative correlation between fish density and gradient. These studies were focused on predicting observed fish densities, not necessarily capacity, and for most of them the predictive extent is limited to a particular watershed. In addition, they all assumed some form of linear fish-habitat relationship which often results in weak predictive power.
+Most studies that have investigated fish-habitat relationships focus on predicting a species' distribution (presence/absence) or the average abundance or density: neither of which can be easily manipulated to predict carrying capacity. Further, many of these studies focus on only one or two measures of habitat. Fausch et al. (1988) conducted a thorough review of attempts to predict the abundance of fish from measurable habitat covariates from 1950 to 1985 and found that the vast majority of multiple linear regression models failed to detect a significant fish-habitat signal. Since that review, there has been progress in identifying some fish-habitat relationships for several salmonid species. Nickelson et al. (1992) demonstrated that juvenile coho salmon (\emph{O. kisutch}) were found in higher densities within pool habitat on the Oregon coast. Similarly, pool and pond densities were good predictors of coho smolt densities in western Washington (Sharma and Hilborn 2001). Bryant and Woodsmith (2009) found that juvenile coho abundance was positively related to large wood at the reach scale; however their results demonstrated a negative relationship between abundance and the number of pools. Braun and Reynolds (2011) similarly found positive associations between spawner densities of sockeye salmon (\emph{O. nerka}) in the Fraser River and large wood, in addition to positive relationships to percent undercuts and percent pools. Densities of adult spawning coho were also higher in forested areas compared to urban or agricultural areas in the Snohomish River watershed (Pess et al. 2002). Mossop and Bradford (2006) examined juvenile Chinook salmon (\emph{O. tshawytscha}) in the Yukon River and found positive correlations between the log of fish density and several metrics related to residual pool dimensions and large woody debris abundance as well as a negative correlation between fish density and gradient. These studies were focused on predicting observed fish densities, not necessarily capacity, and for most of them the predictive extent is limited to a particular watershed. In addition, they all assumed some form of linear fish-habitat relationship which often results in weak predictive power.
 
 A number of studies have used other modeling approaches to elicit fish-habitat relationships. Dunham et al. (2002) used a quantile regression approach to show a negative relationship between cutthroat trout (\emph{O. clarkii}) densities and the width:depth ratio of a stream for the upper quantiles of trout density. The same approach was also used to map the potential extent of sole (\emph{Solea solea}) in the English Channel and southern North Sea (Eastwood et al. 2003). Machine learning models such as boosted regression trees and random forests have been used to examine species biomass, diversity, and distribution for a number of different species (Pittman et al. 2009, Knudby et al. 2010, Compton et al. 2012). The results from these studies highlight the importance and effectiveness of using techniques that can accommodate non-linear fish-habitat relationships and provide motivation for furthering research in this realm.
 
@@ -466,6 +466,7 @@ Whittier, T. R., A. T. Herlihy, C. E. Jordan, and C. Volk. 2011. Landscape class
 
 \caption{\label{tab:fish-hab-sites}The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer-run Chinook salmon parr capacity QRF model}
 \centering
+\fontsize{10}{12}\selectfont
 \begin{tabular}[t]{lrl}
 \toprule
 Watershed & n Sites & Percent\\
@@ -488,6 +489,7 @@ Total & 327 & 100.0\%\\
 
 \caption{\label{tab:select-mets-table}Habitat metrics and descriptions of metrics included in the QRF model to predict spring/summer-run Chinook salmon parr capacity. Metrics are ranked in order of relative importance.}
 \centering
+\fontsize{10}{12}\selectfont
 \begin{tabular}[t]{rll>{\raggedright\arraybackslash}p{3in}}
 \toprule
 Rank & Metric & Metric Category & Description\\
@@ -514,6 +516,7 @@ Rank & Metric & Metric Category & Description\\
 
 \caption{\label{tab:gaa-covars}Globally available attribute (GAA) habitat covariates used to extrapolate quantile random forest (QRF) model predictions of spring/summer-run Chinook parr capacity to a larger scale (e.g., watershed, population), with their coefficients and standard errors.}
 \centering
+\fontsize{10}{12}\selectfont
 \begin{tabular}[t]{lllrr}
 \toprule
 Covariate & Units & Spatial Scale & Estimate & Std. Error\\
@@ -539,6 +542,7 @@ NorWeST Aug. Temperature & C & Reach-2km & -0.149 & 0.119\\
 
 \caption{\label{tab:extrap-r2-table}Summary of extrapolation model fits, split by whether the extrapolation model used CHaMP watershed as a covariate or not.}
 \centering
+\fontsize{10}{12}\selectfont
 \begin{tabular}[t]{llrr}
 \toprule
 Model & Response & $r^2$ & Adjusted $r^2$\\
@@ -555,6 +559,7 @@ non-CHaMP & fish/m & 0.360 & 0.339\\
 
 \caption{\label{tab:sr-table}Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile random forest (QRF) model. Numbers in parentheses are coefficients of variation.}
 \centering
+\fontsize{10}{12}\selectfont
 \begin{tabular}[t]{>{\raggedright\arraybackslash}p{1in}rll>{\raggedright\arraybackslash}p{0.5in}>{\raggedright\arraybackslash}p{0.5in}>{\raggedright\arraybackslash}p{0.5in}>{\raggedright\arraybackslash}p{0.5in}}
 \toprule
 Population & n Yrs & Adult Data & Parr Data & Beverton Holt & Ricker & Hockey Stick & QRF\\

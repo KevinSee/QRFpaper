@@ -25,6 +25,27 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
+    bookdown::word_document2:
+      fig_caption: yes
+      # reference_docx: "../templates/EcologicalApplicationsTemplate.docx" # Insert path for the DOCX file
+      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
+      number_sections: false
+      toc: no
+      always_allow_html: true
+      fig_width: 6
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
+    bookdown::html_document2:
+      fig_caption: yes
+      number_sections: false
+      toc: no
+      fig_width: 7
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       number_sections: false
@@ -38,27 +59,6 @@ output:
       - --lua-filter=../templates/pagebreak.lua
       includes:
         in_header: ../templates/header_manuscript.tex
-    bookdown::html_document2:
-      fig_caption: yes
-      number_sections: false
-      toc: no
-      fig_width: 7
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
-    bookdown::word_document2:
-      fig_caption: yes
-      # reference_docx: "../templates/EcologicalApplicationsTemplate.docx" # Insert path for the DOCX file
-      reference_docx: "../templates/template.docx" # Insert path for the DOCX file
-      number_sections: false
-      toc: no
-      always_allow_html: true
-      fig_width: 6
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
 fontsize: 12pt
 mainfont: Times New Roman
 bibliography:
@@ -68,7 +68,7 @@ csl: "../templates/ecological-applications.csl" # Insert path for the bib-style
 abstract: |
   Establishing robust methods and metrics to evaluate habitat quality is critical for the recovery of endangered Pacific salmonids. A variety of modeling approaches are used for status and trend monitoring of anadromous species throughout the Pacific Northwest, USA, but current methods may fail to capture the complex relationship between fish and habitat and are often limited in predictive power beyond specific watersheds. Further, the focus on species distribution and abundance is not easily manipulated to predict carrying capacity and traditional stock-recruitment analyses are reliant on long-term data which are not always available. In this study, we developed a quantile random forest (QRF) model to  provide estimates of habitat carrying capacity for Chinook salmon parr during the summer months, at both the site and watershed scale. QRF models allow for the consideration of noisy data, correlated variables, and non-linear relationships: common features in fish-habitat datasets. We leveraged Columbia Habitat Monitoring Program (CHaMP) data to select habitat co-variates and predict capacity at those sites. We also identified a set of globally available attributes to extrapolate capacity estimate predictions throughout wadeable streams within the Columbia River basin. Total capacity estimates for watersheds closely matched estimates from alternative fish productivity models. Carrying capacity estimates based on QRF, like those presented here, provide managers a framework to guide the identification, prioritization, and development of habitat rehabilitation actions to recover salmon populations.
 keywords: |
-  carrying capacity; quantile regression; random forests; Chinook; quantile random forest
+  carrying capacity; Chinook salmon; quantile random forest; quantile regression; random forests
 highlights: |
   These are the highlights. 
 ---
@@ -83,7 +83,7 @@ knitr::opts_chunk$set(
   echo = FALSE,
   comment = "#>",
   fig.path = "../figures/",
-  dev = c("pdf", "png", 'tiff'),
+  dev = c("pdf", "png", "tiff"),
   dpi = 400
 )
 ```
@@ -335,7 +335,7 @@ The decline of anadromous Pacific salmonids (*Oncorhynchus spp.*) across the Pac
 
 When it comes to estimating carrying capacity, spawner-recruit models are the gold standard [@Moussalli1986; @Myers1999]. However, such models require a long time-series of accurate estimates of abundance for adults and juveniles, with variation in the number of adults. Such data are unavailable in most watersheds [@Cramer2009], and they do not necessarily allow one to link capacity to habitat characteristics, except perhaps at the watershed scale. Bioenergetics approaches, such as the net rate of energy intake (NREI) have been applied to salmonids to estimate capacity on the 200 - 600 m reach scale [@Wall2016]. However, there are some potential issues with how the food supply (i.e. invertebrate drift) is measured with these methods that could lead to biases in capacity estimates [@Dodrill2016] as well as difficulty in properly constraining drift depletion and inter-species competition, and computational and spatial limitation of this modelling approach [@Wall2016; @Carmichael2020]. In addition, those authors did not take the step of scaling the capacity predictions at the reach scale to entire watersheds. In contrast, @Sweka2010 estimated carrying capacity of Atlantic salmon (*Salmo salar*) parr at the watershed scale, using a quantile regression approach, but the only habitat covariate they included was cumulative drainage area. Estimates of salmonid carrying capacity that leverage fish-habitat relationships are lacking at the watershed scale in the Pacific Northwest.
 
-Most studies that have investigated fish-habitat relationships focus on predicting a species’ distribution (presence / absence) or the average abundance or density: neither of which can be easily manipulated to predict carrying capacity. Further, many of these studies focus on only one or two measures of habitat. @Fausch1988 conducted a thorough review of attempts to predict the abundance of fish from measurable habitat covariates from 1950 to 1985 and found that the vast majority of multiple linear regression models failed to detect a significant fish-habitat signal. Since that review, there has been progress in identifying some fish-habitat relationships for several salmonid species. @Nickelson1992 demonstrated that juvenile coho salmon (*O. kisutch*) were found in higher densities within pool habitat on the Oregon coast. Similarly, pool and pond densities were good predictors of coho smolt densities in western Washington [@Sharma2001]. @Bryant2009 found that juvenile coho abundance was positively related to large wood at the reach scale; however their results demonstrated a negative relationship between abundance and the number of pools. @Braun2011 similarly found positive associations between spawner densities of sockeye salmon (*O. nerka*) in the Fraser River and large wood, in addition to positive relationships to percent undercuts and percent pools. Densities of adult spawning coho were also higher in forested areas compared to urban or agricultural areas in the Snohomish River watershed [@Pess2002]. @Mossop2006 examined juvenile Chinook salmon (*O. tshawytscha*) in the Yukon River and found positive correlations between the log of fish density and several metrics related to residual pool dimensions and large woody debris abundance as well as a negative correlation between fish density and gradient. These studies were focused on predicting observed fish densities, not necessarily capacity, and for most of them the predictive extent is limited to a particular watershed. In addition, they all assumed some form of linear fish-habitat relationship which often results in weak predictive power. 
+Most studies that have investigated fish-habitat relationships focus on predicting a species’ distribution (presence/absence) or the average abundance or density: neither of which can be easily manipulated to predict carrying capacity. Further, many of these studies focus on only one or two measures of habitat. @Fausch1988 conducted a thorough review of attempts to predict the abundance of fish from measurable habitat covariates from 1950 to 1985 and found that the vast majority of multiple linear regression models failed to detect a significant fish-habitat signal. Since that review, there has been progress in identifying some fish-habitat relationships for several salmonid species. @Nickelson1992 demonstrated that juvenile coho salmon (*O. kisutch*) were found in higher densities within pool habitat on the Oregon coast. Similarly, pool and pond densities were good predictors of coho smolt densities in western Washington [@Sharma2001]. @Bryant2009 found that juvenile coho abundance was positively related to large wood at the reach scale; however their results demonstrated a negative relationship between abundance and the number of pools. @Braun2011 similarly found positive associations between spawner densities of sockeye salmon (*O. nerka*) in the Fraser River and large wood, in addition to positive relationships to percent undercuts and percent pools. Densities of adult spawning coho were also higher in forested areas compared to urban or agricultural areas in the Snohomish River watershed [@Pess2002]. @Mossop2006 examined juvenile Chinook salmon (*O. tshawytscha*) in the Yukon River and found positive correlations between the log of fish density and several metrics related to residual pool dimensions and large woody debris abundance as well as a negative correlation between fish density and gradient. These studies were focused on predicting observed fish densities, not necessarily capacity, and for most of them the predictive extent is limited to a particular watershed. In addition, they all assumed some form of linear fish-habitat relationship which often results in weak predictive power. 
 
 A number of studies have used other modeling approaches to elicit fish-habitat relationships. @Dunham2002 used a quantile regression approach to show a negative relationship between cutthroat trout (*O. clarkii*) densities and the width:depth ratio of a stream for the upper quantiles of trout density. The same approach was also used to map the potential extent of sole (*Solea solea*) in the English Channel and southern North Sea [@Eastwood2003]. Machine learning models such as boosted regression trees and random forests have been used to examine species biomass, diversity, and distribution for a number of different species [@Pittman2009; @Knudby2010; @Compton2012]. The results from these studies highlight the importance and effectiveness of using techniques that can accommodate non-linear fish-habitat relationships and provide motivation for furthering research in this realm.
 
@@ -470,7 +470,8 @@ qrf_data %>%
   kable(caption = 'The number of unique sites, by watershed, with paired fish-habitat data used to populate the spring/summer-run Chinook salmon parr capacity QRF model',
         booktabs = T,
         linesep = "") %>%
-  kable_styling(latex_options = c("hold_position"))
+  kable_styling(font_size = 10,
+                latex_options = c("hold_position"))
   
 ```
 
@@ -497,7 +498,8 @@ qrf_mod$importance %>%
         booktabs = T,
         linesep = "",
         format.args = list(width = c(2, 10, 10, 50))) %>%
-  kable_styling(latex_options = c("hold_position")) %>%
+  kable_styling(font_size = 10,
+                latex_options = c("hold_position")) %>%
   column_spec(4, width = '3in')
   
 ```
@@ -539,7 +541,8 @@ tibble(Covariate = gaa_covars) %>%
         linesep = "", 
         escape = F,
         digits = 3) %>%
-  kable_styling(latex_options = c("hold_position"))
+  kable_styling(font_size = 10,
+                latex_options = c("hold_position"))
 
 ```
 
@@ -596,7 +599,8 @@ model_svy_df %>%
         booktabs = T,
         linesep = "",
         digits = 3) %>%
-  kable_styling(latex_options = c("hold_position"))
+  kable_styling(font_size = 10,
+                latex_options = c("hold_position"))
   
 ```
 
@@ -635,7 +639,8 @@ spawn_rec_params %>%
   kable(caption = "Estimates of parr capacity from both spawner-recruit data (Beverton-Holt, Ricker, hockey stick) and from extrapolated estimates of parr capacity from the quantile random forest (QRF) model. Numbers in parentheses are coefficients of variation.",
         booktabs = T,
         linesep = "") %>%
-  kable_styling(latex_options = c("hold_position")) %>%
+  kable_styling(font_size = 10,
+                latex_options = c("hold_position")) %>%
   # kable_styling(latex_options = c('scale_down')) %>%
   column_spec(1, width = "1in") %>%
   column_spec(c(5:8), width = "0.5in")
@@ -707,7 +712,7 @@ plot_partial_dependence(rf_mod = qrf_mod,
   labs(y = 'Capacity Prediction (per m)') +
   scale_color_grey(start = 0.5, end = 0.5) +
   theme(legend.position = 'none',
-        strip.text = element_text(size = 10),
+        strip.text = element_text(size = 9),
         axis.text = element_text(size = 8))
 ```
 
@@ -716,6 +721,6 @@ plot_partial_dependence(rf_mod = qrf_mod,
 ```{r sr-figure, fig.height = 6, fig.cap = "Spawner-recruit data from nine watersheds. Solid lines are the spawner-recruit curve, dashed lines are the estimated capacity, and shaded polygons depict the 95% confidence intervals of capacity. Red corresponds to Beverton-Holt models, purple to Ricker models, blue to hockey stick models, and green to QRF estimates. The QRF solid curve is a Beverton-Holt model with the capacity parameter fixed to the QRF estimate of capacity. A few curves with high capacity estimates were not plotted to improve readability."}
 
 spawn_rec_comp_p +
-  theme(strip.text = element_text(size = 10),
+  theme(strip.text = element_text(size = 9),
         axis.text = element_text(size = 8))
 ```
