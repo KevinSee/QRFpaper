@@ -25,6 +25,15 @@ institute:
   - biomark: Biomark, Inc. 705 South 8th St., Boise, Idaho, 83702, USA
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
+    bookdown::html_document2:
+      fig_caption: yes
+      number_sections: false
+      toc: no
+      fig_width: 7
+      pandoc_args:
+      - --lua-filter=../templates/scholarly-metadata.lua
+      - --lua-filter=../templates/author-info-blocks.lua
+      - --lua-filter=../templates/pagebreak.lua
     bookdown::pdf_document2:
       fig_caption: yes
       number_sections: false
@@ -46,15 +55,6 @@ output:
       toc: no
       always_allow_html: true
       fig_width: 6
-      pandoc_args:
-      - --lua-filter=../templates/scholarly-metadata.lua
-      - --lua-filter=../templates/author-info-blocks.lua
-      - --lua-filter=../templates/pagebreak.lua
-    bookdown::html_document2:
-      fig_caption: yes
-      number_sections: false
-      toc: no
-      fig_width: 7
       pandoc_args:
       - --lua-filter=../templates/scholarly-metadata.lua
       - --lua-filter=../templates/author-info-blocks.lua
@@ -83,8 +83,8 @@ knitr::opts_chunk$set(
   echo = FALSE,
   comment = "#>",
   fig.path = "../figures/",
-  dpi = 400,
-  dev = c("pdf", 'tiff')
+  dev = c("pdf", "png", 'tiff'),
+  dpi = 400
 )
 ```
 
@@ -117,9 +117,9 @@ if(doc.type == 'docx') {
   options(knitr.table.format = "pandoc")
 }
 
-if(doc.type %in% c("docx", "html")) {
-  theme_set(theme_pubr(base_family = "Times New Roman"))
-}
+# if(doc.type %in% c("docx", "html")) {
+#   theme_set(theme_pubr(base_family = "Times New Roman"))
+# }
 
 ```
 
@@ -391,7 +391,7 @@ To summarize capacity at larger scales, the mean linear capacity (e.g., parr/m) 
 
 Spawner-recruit data from several watersheds within the interior Columbia River basin were compiled to validate the extrapolated QRF estimates of Chinook salmon parr capacity. Some watersheds had direct estimates of parr, while some had estimates of pre-smolts and smolts (i.e., fall and spring emigrants) from rotary screw traps. For the latter, estimates of parr were calculated using estimates of over-winter survival to back-calculate parr from smolt estimates, and then adding that to pre-smolt estimates. A series of spawner-recruit functions were then fit to this data including Beverton-Holt, Ricker, and hockey stick [@Froese2008], using the *FSA* package [@R-FSA] in R. Estimates of capacity from each of these spawner-recruit curves were compared with QRF estimates of capacity for the same regions.
 
-All code and data for the analyses presented here can be found in a GitHub repository ([(https://doi.org/10.5281/zenodo.4300942)](https://doi.org/10.5281/zenodo.4300942)).
+All code and data for the analyses presented here can be found in a GitHub repository ([https://doi.org/10.5281/zenodo.4300942](https://doi.org/10.5281/zenodo.4300942)).
 
 <!-- ([(https://github.com/KevinSee/QRFpaper)](https://github.com/KevinSee/QRFpaper)) -->
 

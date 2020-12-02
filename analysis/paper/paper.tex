@@ -184,7 +184,7 @@ To summarize capacity at larger scales, the mean linear capacity (e.g., parr/m) 
 
 Spawner-recruit data from several watersheds within the interior Columbia River basin were compiled to validate the extrapolated QRF estimates of Chinook salmon parr capacity. Some watersheds had direct estimates of parr, while some had estimates of pre-smolts and smolts (i.e., fall and spring emigrants) from rotary screw traps. For the latter, estimates of parr were calculated using estimates of over-winter survival to back-calculate parr from smolt estimates, and then adding that to pre-smolt estimates. A series of spawner-recruit functions were then fit to this data including Beverton-Holt, Ricker, and hockey stick (Froese 2008), using the \emph{FSA} package (Ogle et al. 2020) in R. Estimates of capacity from each of these spawner-recruit curves were compared with QRF estimates of capacity for the same regions.
 
-All code and data for the analyses presented here can be found in a GitHub repository (\href{https://github.com/KevinSee/QRFpaper}{(https://github.com/KevinSee/QRFpaper)}).
+All code and data for the analyses presented here can be found in a GitHub repository (\url{https://doi.org/10.5281/zenodo.4300942}).
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
@@ -597,7 +597,7 @@ Upper Lemhi & 7 & Spawners & RST & 333,229 (0.322) & 229,635 (0.212) & 242,637 (
 
 \begin{figure}
 \centering
-\includegraphics{figures/rel-imp-figure-1.pdf}
+\includegraphics{../figures/rel-imp-figure-1.pdf}
 \caption{\label{fig:rel-imp-figure}Relative importance of each habitat covariate included in the quantile random forest (QRF) model to predict habitat capacity, during summer months, for spring/summer-run Chinook salmon parr}
 \end{figure}
 
@@ -605,7 +605,7 @@ Upper Lemhi & 7 & Spawners & RST & 333,229 (0.322) & 229,635 (0.212) & 242,637 (
 
 \begin{figure}
 \centering
-\includegraphics{figures/pdp-figure-1.pdf}
+\includegraphics{../figures/pdp-figure-1.pdf}
 \caption{\label{fig:pdp-figure}Partial dependence plots for the spring/summer-run Chinook salmon parr capacity quantile random forest (QRF) model, depicting how parr capacity shifts as each habitat metric changes, assuming all other habitat metrics remain at their mean values. Tick marks along the X-axis depict observed values.}
 \end{figure}
 
@@ -613,7 +613,7 @@ Upper Lemhi & 7 & Spawners & RST & 333,229 (0.322) & 229,635 (0.212) & 242,637 (
 
 \begin{figure}
 \centering
-\includegraphics{figures/sr-figure-1.pdf}
+\includegraphics{../figures/sr-figure-1.pdf}
 \caption{\label{fig:sr-figure}Spawner-recruit data from nine watersheds. Solid lines are the spawner-recruit curve, dashed lines are the estimated capacity, and shaded polygons depict the 95\% confidence intervals of capacity. Red corresponds to Beverton-Holt models, purple to Ricker models, blue to hockey stick models, and green to QRF estimates. The QRF solid curve is a Beverton-Holt model with the capacity parameter fixed to the QRF estimate of capacity. A few curves with high capacity estimates were not plotted to improve readability.}
 \end{figure}
 
