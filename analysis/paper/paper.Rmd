@@ -1,5 +1,6 @@
 ---
 title: Estimating carrying capacity for juvenile salmon using quantile random forest models
+subtitle: Freshwater Ecology
 author:
   - Kevin E. See:
       email: Kevin.See@merck.com

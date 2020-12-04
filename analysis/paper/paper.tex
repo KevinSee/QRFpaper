@@ -97,8 +97,15 @@
 \usepackage{xcolor}
 
 \title{Estimating carrying capacity for juvenile salmon using quantile random forest models}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{Freshwater Ecology}
 \author{Kevin E. See\textsuperscript{1,*}, Michael W. Ackerman\textsuperscript{1}, Richard A. Carmichael\textsuperscript{1}, Sarah L. Hoffmann\textsuperscript{1}, and Chris Beasley\textsuperscript{1}}
-\date{December 03, 2020}
+\date{December 04, 2020}
 
 \begin{document}
 \maketitle
