@@ -12,7 +12,7 @@ This repository contains the data and code for our paper:
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
 > Hoffman, and Chris Beasley (2021). *Estimating Carrying Capacity for
 > Juvenile Salmon using Quantile Random Forest Models*. Ecosphere
-> \<<http://doi.org/10.1002/ecs2.3404> \>
+> <http://doi.org/10.1002/ecs2.3404>
 
 ### How to cite
 

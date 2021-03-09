@@ -25,7 +25,7 @@ Journal <- "Ecosphere"
 
 This repository contains the data and code for our paper:
 
-> `r Authors` (`r yr`). _`r Title`_. `r Journal` <http://doi.org/10.1002/ecs2.3404 >
+> `r Authors` (`r yr`). _`r Title`_. `r Journal` <http://doi.org/10.1002/ecs2.3404>
 
 ### How to cite
 
