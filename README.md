@@ -10,26 +10,19 @@
 This repository contains the data and code for our paper:
 
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
-> Hoffman, and Chris Beasley (2020). *Estimating Carrying Capacity for
+> Hoffman, and Chris Beasley (2021). *Estimating Carrying Capacity for
 > Juvenile Salmon using Quantile Random Forest Models*. Ecosphere
-> <https://doi.org/xxx/xxx>
-
-Our pre-print is online here:
-
-> See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
-> Hoffman, and Chris Beasley (2020). *Estimating Carrying Capacity for
-> Juvenile Salmon using Quantile Random Forest Models*. Ecosphere,
-> Accessed 01 Dec 2020. Online at <https://doi.org/xxx/xxx>
+> \<<http://doi.org/10.1002/ecs2.3404> \>
 
 ### How to cite
 
 Please cite this compendium as:
 
 > See, Kevin E., Michael W. Ackerman, Richard A. Carmichael, Sarah
-> Hoffman, and Chris Beasley, (2020). *Compendium of R code and data for
+> Hoffman, and Chris Beasley, (2021). *Compendium of R code and data for
 > Estimating Carrying Capacity for Juvenile Salmon using Quantile Random
-> Forest Models*. Accessed 01 Dec 2020. Online at
-> <https://doi.org/xxx/xxx>
+> Forest Models*. Accessed 09 Mar 2021. Online at
+> <https://doi.org/10.5281/zenodo.4300942>
 
 ### How to download or install
 
