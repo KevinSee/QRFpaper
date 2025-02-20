@@ -52,7 +52,7 @@ plot_partial_dependence = function(rf_mod,
 
   # get means and ranges of all
   covar_range = data %>%
-    select(one_of(as.character(plot_covars))) %>%
+    select(one_of(as.character(covars))) %>%
     gather(Metric, value) %>%
     group_by(Metric) %>%
     summarise_at(vars(value),
@@ -65,6 +65,7 @@ plot_partial_dependence = function(rf_mod,
 
   # create data.frame with sequence of values across each covariate, keeping other covariates at their average value
   pdp_df = covar_range %>%
+    filter(Metric %in% plot_covars) %>%
     split(.$Metric) %>%
     map_df(.id = 'Metric',
            .f = function(x) {
@@ -124,7 +125,8 @@ plot_partial_dependence = function(rf_mod,
   # get covariate labels
   pdp_df = pdp_df %>%
     left_join(data_dict %>%
-                select(Metric = ShortName, covar_label = Name)) %>%
+                select(Metric = ShortName, covar_label = Name) %>%
+                distinct()) %>%
     # put covariates in order by relative importance
     left_join(rel_imp %>%
                 select(Metric, relImp)) %>%

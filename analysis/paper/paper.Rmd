@@ -97,7 +97,8 @@ knitr::opts_chunk$set(
 # what packages are necessary
 library(survey)
 library(tidyverse)
-library(QRFpaper)
+# library(QRFpaper)
+devtools::load_all()
 library(janitor)
 library(knitr)
 library(pander)
